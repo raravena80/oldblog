@@ -17,11 +17,24 @@ It's a follow up to a previous
  be included in the HAProxy playbook as well as any other playbooks with something
  like this:
 
-``` yaml Any playbook
+``` yaml scout.yml
 ---
+PLAYBOOK: Install scout in Ubuntu
+---
+# Create a subset of users
+- name: scout
+  hosts: all
+  user: user-with-sudo
+  sudo: True
 
-- include tasks/scout.yml
+  vars:
+    scout_key: YourScoutAPIKeyFromTheirWebsite
+
+  tasks:
+    - include: tasks/scout.yml
 ```
+
+We start by defining a "task" file:
 
 ``` yaml tasks/scout.yml start:1
 ---
@@ -127,25 +140,6 @@ the system ruby (most of the times you don't).
   shell: >
     executable=/bin/bash source /etc/profile.d/rvm.sh;
     rvm --default use 2.0.0
-```
-
-Now to make it all work you need a Playbook to run it.
-
-``` yaml scout.yml
----
-PLAYBOOK: Install scout in Ubuntu
----
-# Create a subset of users
-- name: scout
-  hosts: all
-  user: user-with-sudo
-  sudo: True
-
-  vars:
-    scout_key: YourScoutAPIKeyFromTheirWebsite
-
-  tasks:
-    - include: tasks/scout.yml
 ```
 
 and now run it.
