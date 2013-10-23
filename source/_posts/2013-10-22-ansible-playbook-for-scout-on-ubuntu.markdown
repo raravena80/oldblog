@@ -23,12 +23,12 @@ It's a follow up to a previous
 - include tasks/scout.yml
 ```
 
-``` yaml tasks/scout.yml
+``` yaml tasks/scout.yml start:1
 ---
 # TASK: ScoutApp Monitoring (https://scoutapp.com) 
 
 # Separate task to install Ruby
-- include: ../tasks/ruby.yml
+- include: ruby.yml
 
 - name: Install scout + dependencies
   shell: >
@@ -40,30 +40,45 @@ It's a follow up to a previous
     dest=/root/.scout state=directory
     owner=root group=root mode=0700
 
-- name: Copy over scout public key
-  copy: >
-    src=../packages/files/scout/scout_rsa.pub
-    dest=/root/.scout/scout_rsa.pub
-    owner=root group=root mode=0400
 ```
 
 In the same file add the crontab entry
-and logrotate entry for Scout
+and logrotate entry for Scout.
 
-``` yaml tasks/scout.yml start:24
+``` yaml tasks/scout.yml start:20
 
 - name: Scout cron script crontab
   template: >
     dest=/etc/cron.d/scout
     src=../packages/templates/scout/scout-crontab.j2
     owner=root group=root mode=0444
-  when_string: $env == 'prod'
 
 - name: Scout cron script logrotate
   copy: >
     dest=/etc/logrotate.d/scout
     src=../packages/files/scout/scout-logrotate
     owner=root group=root mode=0444
+```
+
+This is what scout-crontab.j2 looks like:
+
+``` jinja templates/scout-crontab.j2
+# crontab for Scout monitoring run by root
+* * * * * root /bin/bash -l -c 'scout -n "{{ ansible_fqdn }}" {{ scout_key }}' >> /var/log/scout.log 2>&1
+```
+
+And this is what scout-logrotate looks like:
+
+``` plain files/scout-logrotate
+/var/log/admobius/scout.log
+{
+      rotate 7
+      daily
+      compress
+      delaycompress
+      missingok
+      notifempty
+}
 ```
 
 Now to install ruby using RVM, if you don't want to use
@@ -112,4 +127,29 @@ the system ruby (most of the times you don't).
   shell: >
     executable=/bin/bash source /etc/profile.d/rvm.sh;
     rvm --default use 2.0.0
+```
+
+Now to make it all work you need a Playbook to run it.
+
+``` yaml scout.yml
+---
+PLAYBOOK: Install scout in Ubuntu
+---
+# Create a subset of users
+- name: scout
+  hosts: all
+  user: user-with-sudo
+  sudo: True
+
+  vars:
+    scout_key: YourScoutAPIKeyFromTheirWebsite
+
+  tasks:
+    - include: tasks/scout.yml
+```
+
+and now run it.
+
+``` bash run.sh
+ansible-playbook -T 120 scout.yml
 ```
