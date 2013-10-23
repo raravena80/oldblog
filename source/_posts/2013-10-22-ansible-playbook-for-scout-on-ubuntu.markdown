@@ -21,7 +21,6 @@ It's a follow up to a previous
 ---
 PLAYBOOK: Install scout in Ubuntu
 ---
-# Create a subset of users
 - name: scout
   hosts: all
   user: user-with-sudo
