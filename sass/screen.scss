@@ -9,3 +9,8 @@
 @import "partials";
 @import "plugins/**/*";
 @import "custom/styles";
+
+body > header {
+      background-image:url('/images/header.jpg');
+      background-repeat:no-repeat;
+}
