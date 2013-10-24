@@ -19,7 +19,7 @@ It's a follow up to a previous
 
 ``` yaml scout.yml
 ---
-PLAYBOOK: Install scout in Ubuntu
+PLAYBOOK: Install scout on Ubuntu
 ---
 - name: scout
   hosts: all
@@ -143,6 +143,6 @@ the system ruby (most of the times you don't).
 
 and now run it.
 
-``` bash run.sh
+<code>
 ansible-playbook -T 120 scout.yml
-```
+</code>
