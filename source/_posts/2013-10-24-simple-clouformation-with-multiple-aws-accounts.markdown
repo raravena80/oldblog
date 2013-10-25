@@ -434,4 +434,4 @@ Finally some outputs.
 ```
 
 To verify that syntax of your JSON script, save the full file to something
-like `cf.json` and run: `python -mjson.tool cf.json`
+like `cf.json` and run: `cat cf.json | python -mjson.tool`
