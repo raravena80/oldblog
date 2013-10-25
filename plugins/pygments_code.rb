@@ -140,7 +140,8 @@ module Octopress
         end: endline
       }
 
-      defaults.each { |k,v| options[k] ||= defaults[k] }
+      # defaults.each { |k,v| options[k] ||= defaults[k] }
+      options.each { |k,v| options[k] ||= defaults[k] }
     end
 
     def self.clean_markup (input)

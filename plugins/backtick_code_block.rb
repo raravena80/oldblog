@@ -13,7 +13,6 @@ module BacktickCodeBlock
 
         @options = {}
         clean_markup = Octopress::Pygments.clean_markup(markup)
-
         if clean_markup =~ AllOptions
           @options = {
             lang: $1,
@@ -24,12 +23,19 @@ module BacktickCodeBlock
         elsif clean_markup =~ LangCaption
           @options = {
             lang: $1,
-            title: $2
+            title: $2,
+            url: nil,
+            link_text: "link",
           }
         end
 
-        @options = Octopress::Pygments.parse_markup(markup, @options)
+        # Extra default options
+        @options[:linenos] = true
+        @options[:marks] = []
+        @options[:start] = 1
+        @options[:end] = nil
 
+        @options = Octopress::Pygments.parse_markup(markup, @options)
         begin
           code = Octopress::Pygments.highlight(code, @options)
           code = "<notextile>#{code}</notextile>" if ext.match(/textile/)

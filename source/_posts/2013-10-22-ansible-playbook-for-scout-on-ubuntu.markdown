@@ -57,7 +57,7 @@ We start by defining a "task" file:
 In the same file add the crontab entry
 and logrotate entry for Scout.
 
-``` yaml tasks/scout.yml start:20
+``` yaml tasks/scout.yml start:17
 
 - name: Scout cron script crontab
   template: >
@@ -143,6 +143,4 @@ the system ruby (most of the times you don't).
 
 and now run it.
 
-<code>
-ansible-playbook -T 120 scout.yml
-</code>
+`ansible-playbook -T 120 scout.yml`
