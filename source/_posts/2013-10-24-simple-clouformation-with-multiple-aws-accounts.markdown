@@ -40,7 +40,7 @@ First we ask for `parameters` in the CloudFormation template:
       "MaxLength":"1",
       "AllowedValues":[
         "Production",
-        "Dev",
+        "Dev"
       ],
       "ConstraintDescription":"Must be either 'Production', or 'Dev'"
     },
@@ -224,7 +224,7 @@ we are using.
              "Fn::Join": [
                  "\n",
                  [ "#!/bin/bash",
-                   { "Fn::Join": [ "", [ "ENV='", { "Fn::FindInMap":[ "AWSAccountInfo", { "Ref":"AwsAccount" }, "envName" ] }, "'" ] ] },
+                   { "Fn::Join": [ "", [ "ENV='", { "Fn::FindInMap":[ "AWSAccountInfo", { "Ref":"AwsAccount" }, "envName" ] }, "'" ] ] }
                  ]
              ]
           }
@@ -396,7 +396,7 @@ An RDS instance can also be added to this template.
         ]
       }
     },
-    "RdsMetaSlaveIngress":{
+    "RdsIngress":{
       "Type":"AWS::RDS::DBSecurityGroupIngress",
       "Properties":{
         "DBSecurityGroupName":"web-dbbackend",
@@ -404,7 +404,7 @@ An RDS instance can also be added to this template.
           "Ref":"InstanceSecurityGroup"
         }
       }
-    },
+    }
 
 ```
 Finally some outputs.
@@ -432,3 +432,6 @@ Finally some outputs.
   }
 }
 ```
+
+To verify that syntax of your JSON script, save the full file to something
+like `cf.json` and run: `python -mjson.tool cf.json`
