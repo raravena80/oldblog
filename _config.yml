@@ -101,3 +101,7 @@ google_analytics_tracking_id:
 
 # Facebook Like
 facebook_like: true
+
+# Gravatar
+gravatar_email: raravena80@gmail.com
+
