@@ -9,11 +9,10 @@ categories:
 This posts describes how to create a simple
 [Ansible](http://www.ansibleworks.com) task
 on how to setup [PaperTrail](https://www.papertrailapp.com) on Ubuntu.
-Because it's a `task` it needs to be included in an ansible playbook.
 
 It's a follow up to a previous
  [blog]({% post_url 2013-10-21-how-to-create-an-ansible-playbook-to-configure-haproxy %})
- describing an Ansible Playbook to setup an HAProxy system. This Ansible task can
+ describing an Ansible Playbook to setup an HAProxy system. This Ansible `task` can
  be included in the HAProxy playbook as well as any other playbooks with something
  like this:
 
