@@ -7,8 +7,8 @@ categories:
 ---
 
 This posts describes how to create a simple
-[Ansible](http://www.ansiblew) task
-on how to setup [PaperTrail](https://www.scoutapp.com) on Ubuntu.
+[Ansible](http://www.ansibleworks.com) task
+on how to setup [PaperTrail](https://www.papertrailapp.com) on Ubuntu.
 Because it's a `task` it needs to be included in an ansible playbook.
 
 It's a follow up to a previous
