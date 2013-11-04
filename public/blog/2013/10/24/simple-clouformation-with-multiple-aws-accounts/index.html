@@ -1,0 +1,739 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Simple Clouformation With Multiple AWS Accounts - Ricardo Aravena's Blog</title>
+  <meta name="author" content="Ricardo Aravena">
+
+  
+  <meta name="description" content="In this post I&rsquo;ll describe how to create a simple AWS CloudFormation template
+so that we can deploy stack using multiple AWS accounts. In other &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://raravena80.github.io/blog/2013/10/24/simple-clouformation-with-multiple-aws-accounts">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="Ricardo Aravena's Blog" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Ricardo Aravena's Blog</a></h1>
+  
+    <h2>Blogging for DevOps hackers.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:raravena80.github.io" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Simple Clouformation With Multiple AWS Accounts</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-10-24T14:03:00-07:00" pubdate data-updated="true">Oct 24<span>th</span>, 2013</time>
+        
+         | <a href="#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>In this post I&rsquo;ll describe how to create a simple AWS CloudFormation template
+so that we can deploy stack using multiple AWS accounts.  In other words a common
+JSON CloudFormation template that can be use to bring
+up a stack in multiple accounts. The way we are able to do this is by
+having exact copies of the <a href="http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ComponentsAMIs.html">EC2 AMIs</a>
+on all the accounts and regions where we are deploying our stack.</p>
+
+<p>With the new features from AWS including the ability to link multiple accounts,
+many customers are starting to use accounts say for different departments or
+for different purposes say, production, QA, development, sales.  So, the motivation
+behind this script is the need for single JSON format that works
+across all accounts.</p>
+
+<p>For more information on CloudFormation you can visit the <a href="http://aws.amazon.com/cloudformation/">AWS Cloudformation Page</a> as
+well as the <a href="http://aws.amazon.com/documentation/cloudformation/">AWS Cloudformation documentation</a> page.</p>
+
+<p>First we ask for <code>parameters</code> in the CloudFormation template:</p>
+
+<p><figure class='code'><figcaption>cf.json</figcaption><div class='highlight'><table><tr><td class='line-numbers' aria-hidden='true'><pre><div data-line='1' class='line-number'></div><div data-line='2' class='line-number'></div><div data-line='3' class='line-number'></div><div data-line='4' class='line-number'></div><div data-line='5' class='line-number'></div><div data-line='6' class='line-number'></div><div data-line='7' class='line-number'></div><div data-line='8' class='line-number'></div><div data-line='9' class='line-number'></div><div data-line='10' class='line-number'></div><div data-line='11' class='line-number'></div><div data-line='12' class='line-number'></div><div data-line='13' class='line-number'></div><div data-line='14' class='line-number'></div><div data-line='15' class='line-number'></div><div data-line='16' class='line-number'></div><div data-line='17' class='line-number'></div><div data-line='18' class='line-number'></div><div data-line='19' class='line-number'></div><div data-line='20' class='line-number'></div><div data-line='21' class='line-number'></div><div data-line='22' class='line-number'></div><div data-line='23' class='line-number'></div><div data-line='24' class='line-number'></div><div data-line='25' class='line-number'></div><div data-line='26' class='line-number'></div><div data-line='27' class='line-number'></div><div data-line='28' class='line-number'></div><div data-line='29' class='line-number'></div><div data-line='30' class='line-number'></div><div data-line='31' class='line-number'></div><div data-line='32' class='line-number'></div></pre></td><td class='main  json'><pre><div class='line'><span class="p">{</span>
+</div><div class='line'>  <span class="nt">&quot;AWSTemplateFormatVersion&quot;</span><span class="p">:</span><span class="s2">&quot;2010-09-09&quot;</span><span class="p">,</span>
+</div><div class='line'>  <span class="nt">&quot;Description&quot;</span><span class="p">:</span><span class="s2">&quot;My WebService&quot;</span><span class="p">,</span>
+</div><div class='line'>  <span class="nt">&quot;Parameters&quot;</span><span class="p">:{</span>
+</div><div class='line'>    <span class="nt">&quot;AwsAccount&quot;</span><span class="p">:{</span>
+</div><div class='line'>      <span class="nt">&quot;Description&quot;</span><span class="p">:</span><span class="s2">&quot;Account: Production, or Dev&quot;</span><span class="p">,</span>
+</div><div class='line'>      <span class="nt">&quot;Type&quot;</span><span class="p">:</span><span class="s2">&quot;String&quot;</span><span class="p">,</span>
+</div><div class='line'>      <span class="nt">&quot;Default&quot;</span><span class="p">:</span><span class="s2">&quot;Production&quot;</span><span class="p">,</span>
+</div><div class='line'>      <span class="nt">&quot;MinLength&quot;</span><span class="p">:</span><span class="s2">&quot;1&quot;</span><span class="p">,</span>
+</div><div class='line'>      <span class="nt">&quot;MaxLength&quot;</span><span class="p">:</span><span class="s2">&quot;1&quot;</span><span class="p">,</span>
+</div><div class='line'>      <span class="nt">&quot;AllowedValues&quot;</span><span class="p">:[</span>
+</div><div class='line'>        <span class="s2">&quot;Production&quot;</span><span class="p">,</span>
+</div><div class='line'>        <span class="s2">&quot;Dev&quot;</span>
+</div><div class='line'>      <span class="p">],</span>
+</div><div class='line'>      <span class="nt">&quot;ConstraintDescription&quot;</span><span class="p">:</span><span class="s2">&quot;Must be either &#39;Production&#39;, or &#39;Dev&#39;&quot;</span>
+</div><div class='line'>    <span class="p">},</span>
+</div><div class='line'>    <span class="nt">&quot;InstanceType&quot;</span><span class="p">:{</span>
+</div><div class='line'>      <span class="nt">&quot;Description&quot;</span><span class="p">:</span><span class="s2">&quot;EC2 instnce type to launch&quot;</span><span class="p">,</span>
+</div><div class='line'>      <span class="nt">&quot;Type&quot;</span><span class="p">:</span><span class="s2">&quot;String&quot;</span><span class="p">,</span>
+</div><div class='line'>      <span class="nt">&quot;Default&quot;</span><span class="p">:</span><span class="s2">&quot;m1.large&quot;</span>
+</div><div class='line'>    <span class="p">},</span>
+</div><div class='line'>    <span class="nt">&quot;MinGroupSize&quot;</span><span class="p">:{</span>
+</div><div class='line'>      <span class="nt">&quot;Description&quot;</span><span class="p">:</span><span class="s2">&quot;Minimum number of servers to launch &ndash; Must match a multiple of avzones available in region&quot;</span><span class="p">,</span>
+</div><div class='line'>      <span class="nt">&quot;Type&quot;</span><span class="p">:</span><span class="s2">&quot;Number&quot;</span><span class="p">,</span>
+</div><div class='line'>      <span class="nt">&quot;Default&quot;</span><span class="p">:</span><span class="s2">&quot;3&quot;</span>
+</div><div class='line'>    <span class="p">},</span>
+</div><div class='line'>    <span class="nt">&quot;MaxGroupSize&quot;</span><span class="p">:{</span>
+</div><div class='line'>      <span class="nt">&quot;Description&quot;</span><span class="p">:</span><span class="s2">&quot;Maximum number of servers to launch &ndash; Must match a multiple of avzones available in region&quot;</span><span class="p">,</span>
+</div><div class='line'>      <span class="nt">&quot;Type&quot;</span><span class="p">:</span><span class="s2">&quot;Number&quot;</span><span class="p">,</span>
+</div><div class='line'>      <span class="nt">&quot;Default&quot;</span><span class="p">:</span><span class="s2">&quot;30&quot;</span>
+</div><div class='line'>    <span class="p">}</span>
+</div><div class='line'>  <span class="p">},</span>
+</div></pre></td></tr></table></div></figure></p>
+
+<p>Next up is the mappings definition, we have to define specific parameters for each account.
+Note the accountID variable is a generic one. You have to subsitute with your specific accountIds</p>
+
+<p><figure class='code'><figcaption>cf.json</figcaption><div class='highlight'><table><tr><td class='line-numbers' aria-hidden='true'><pre><div data-line='33' class='line-number'></div><div data-line='34' class='line-number'></div><div data-line='35' class='line-number'></div><div data-line='36' class='line-number'></div><div data-line='37' class='line-number'></div><div data-line='38' class='line-number'></div><div data-line='39' class='line-number'></div><div data-line='40' class='line-number'></div><div data-line='41' class='line-number'></div><div data-line='42' class='line-number'></div><div data-line='43' class='line-number'></div><div data-line='44' class='line-number'></div><div data-line='45' class='line-number'></div><div data-line='46' class='line-number'></div><div data-line='47' class='line-number'></div><div data-line='48' class='line-number'></div><div data-line='49' class='line-number'></div><div data-line='50' class='line-number'></div><div data-line='51' class='line-number'></div><div data-line='52' class='line-number'></div><div data-line='53' class='line-number'></div><div data-line='54' class='line-number'></div><div data-line='55' class='line-number'></div><div data-line='56' class='line-number'></div><div data-line='57' class='line-number'></div><div data-line='58' class='line-number'></div><div data-line='59' class='line-number'></div><div data-line='60' class='line-number'></div><div data-line='61' class='line-number'></div><div data-line='62' class='line-number'></div><div data-line='63' class='line-number'></div><div data-line='64' class='line-number'></div><div data-line='65' class='line-number'></div><div data-line='66' class='line-number'></div><div data-line='67' class='line-number'></div><div data-line='68' class='line-number'></div><div data-line='69' class='line-number'></div><div data-line='70' class='line-number'></div><div data-line='71' class='line-number'></div><div data-line='72' class='line-number'></div></pre></td><td class='main  json'><pre><div class='line'>  <span class="s2">&quot;Mappings&quot;</span><span class="err">:</span><span class="p">{</span>
+</div><div class='line'>    <span class="nt">&quot;AWSAccountInfo&quot;</span><span class="p">:{</span>
+</div><div class='line'>      <span class="nt">&quot;Production&quot;</span><span class="p">:{</span>
+</div><div class='line'>        <span class="nt">&quot;accountId&quot;</span><span class="p">:</span> <span class="mi">123456789012</span><span class="p">,</span>
+</div><div class='line'>        <span class="nt">&quot;hostedZone&quot;</span><span class="p">:</span><span class="s2">&quot;production.mydomain.com.&quot;</span><span class="p">,</span>
+</div><div class='line'>        <span class="nt">&quot;keypair&quot;</span><span class="p">:</span><span class="s2">&quot;production&quot;</span><span class="p">,</span>
+</div><div class='line'>        <span class="nt">&quot;envName&quot;</span><span class="p">:</span><span class="s2">&quot;production&quot;</span><span class="p">,</span>
+</div><div class='line'>        <span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="s2">&quot;Production&quot;</span>
+</div><div class='line'>      <span class="p">},</span>
+</div><div class='line'>      <span class="nt">&quot;Dev&quot;</span><span class="p">:{</span>
+</div><div class='line'>        <span class="nt">&quot;accountId&quot;</span><span class="p">:</span> <span class="mi">123456789012</span><span class="p">,</span>
+</div><div class='line'>        <span class="nt">&quot;hostedZone&quot;</span><span class="p">:</span><span class="s2">&quot;dev.mydomain.com.&quot;</span><span class="p">,</span>
+</div><div class='line'>        <span class="nt">&quot;keypair&quot;</span><span class="p">:</span><span class="s2">&quot;dev&quot;</span><span class="p">,</span>
+</div><div class='line'>        <span class="nt">&quot;envName&quot;</span><span class="p">:</span><span class="s2">&quot;dev&quot;</span><span class="p">,</span>
+</div><div class='line'>        <span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="s2">&quot;Dev&quot;</span>
+</div><div class='line'>      <span class="p">}</span>
+</div><div class='line'>    <span class="p">},</span>
+</div><div class='line'>    <span class="nt">&quot;Production&quot;</span><span class="p">:{</span>
+</div><div class='line'>      <span class="nt">&quot;us-east-1&quot;</span><span class="p">:{</span>
+</div><div class='line'>        <span class="nt">&quot;ami&quot;</span><span class="p">:</span><span class="s2">&quot;ami-xxxxxxxx&quot;</span>
+</div><div class='line'>      <span class="p">},</span>
+</div><div class='line'>      <span class="nt">&quot;us-west-1&quot;</span><span class="p">:{</span>
+</div><div class='line'>        <span class="nt">&quot;ami&quot;</span><span class="p">:</span><span class="s2">&quot;ami-xxxxxxxx&quot;</span>
+</div><div class='line'>      <span class="p">},</span>
+</div><div class='line'>      <span class="nt">&quot;us-west-2&quot;</span><span class="p">:{</span>
+</div><div class='line'>        <span class="nt">&quot;ami&quot;</span><span class="p">:</span><span class="s2">&quot;ami-xxxxxxxx&quot;</span>
+</div><div class='line'>      <span class="p">}</span>
+</div><div class='line'>    <span class="p">},</span>
+</div><div class='line'>    <span class="nt">&quot;Dev&quot;</span><span class="p">:{</span>
+</div><div class='line'>      <span class="nt">&quot;us-east-1&quot;</span><span class="p">:{</span>
+</div><div class='line'>        <span class="nt">&quot;ami&quot;</span><span class="p">:</span><span class="s2">&quot;ami-xxxxxxxx&quot;</span>
+</div><div class='line'>      <span class="p">},</span>
+</div><div class='line'>      <span class="nt">&quot;us-west-1&quot;</span><span class="p">:{</span>
+</div><div class='line'>        <span class="nt">&quot;ami&quot;</span><span class="p">:</span><span class="s2">&quot;ami-xxxxxxxx&quot;</span>
+</div><div class='line'>      <span class="p">},</span>
+</div><div class='line'>      <span class="nt">&quot;us-west-2&quot;</span><span class="p">:{</span>
+</div><div class='line'>        <span class="nt">&quot;ami&quot;</span><span class="p">:</span><span class="s2">&quot;ami-xxxxxxxx&quot;</span>
+</div><div class='line'>      <span class="p">}</span>
+</div><div class='line'>    <span class="p">}</span>
+</div><div class='line'>  <span class="p">}</span><span class="err">,</span>
+</div></pre></td></tr></table></div></figure></p>
+
+<p>Now you want to setup your resources starting with the Autoscaling group.
+Notice how on the notification configuration we specify parameters
+that identify out account.</p>
+
+<p><figure class='code'><figcaption>cf.json</figcaption><div class='highlight'><table><tr><td class='line-numbers' aria-hidden='true'><pre><div data-line='73' class='line-number'></div><div data-line='74' class='line-number'></div><div data-line='75' class='line-number'></div><div data-line='76' class='line-number'></div><div data-line='77' class='line-number'></div><div data-line='78' class='line-number'></div><div data-line='79' class='line-number'></div><div data-line='80' class='line-number'></div><div data-line='81' class='line-number'></div><div data-line='82' class='line-number'></div><div data-line='83' class='line-number'></div><div data-line='84' class='line-number'></div><div data-line='85' class='line-number'></div><div data-line='86' class='line-number'></div><div data-line='87' class='line-number'></div><div data-line='88' class='line-number'></div><div data-line='89' class='line-number'></div><div data-line='90' class='line-number'></div><div data-line='91' class='line-number'></div><div data-line='92' class='line-number'></div><div data-line='93' class='line-number'></div><div data-line='94' class='line-number'></div><div data-line='95' class='line-number'></div><div data-line='96' class='line-number'></div><div data-line='97' class='line-number'></div><div data-line='98' class='line-number'></div><div data-line='99' class='line-number'></div><div data-line='100' class='line-number'></div><div data-line='101' class='line-number'></div><div data-line='102' class='line-number'></div><div data-line='103' class='line-number'></div><div data-line='104' class='line-number'></div><div data-line='105' class='line-number'></div><div data-line='106' class='line-number'></div><div data-line='107' class='line-number marked start'></div><div data-line='108' class='line-number marked'></div><div data-line='109' class='line-number marked'></div><div data-line='110' class='line-number marked'></div><div data-line='111' class='line-number marked'></div><div data-line='112' class='line-number marked'></div><div data-line='113' class='line-number marked'></div><div data-line='114' class='line-number marked'></div><div data-line='115' class='line-number marked'></div><div data-line='116' class='line-number marked'></div><div data-line='117' class='line-number marked'></div><div data-line='118' class='line-number marked'></div><div data-line='119' class='line-number marked'></div><div data-line='120' class='line-number marked'></div><div data-line='121' class='line-number marked'></div><div data-line='122' class='line-number marked'></div><div data-line='123' class='line-number marked'></div><div data-line='124' class='line-number marked'></div><div data-line='125' class='line-number marked'></div><div data-line='126' class='line-number marked'></div><div data-line='127' class='line-number marked'></div><div data-line='128' class='line-number marked end'></div><div data-line='129' class='line-number'></div><div data-line='130' class='line-number'></div><div data-line='131' class='line-number'></div><div data-line='132' class='line-number'></div><div data-line='133' class='line-number'></div><div data-line='134' class='line-number'></div><div data-line='135' class='line-number'></div><div data-line='136' class='line-number'></div><div data-line='137' class='line-number'></div></pre></td><td class='main  json'><pre><div class='line'>  <span class="s2">&quot;Resources&quot;</span><span class="err">:</span><span class="p">{</span>
+</div><div class='line'>    <span class="nt">&quot;ServerGroup&quot;</span><span class="p">:{</span>
+</div><div class='line'>      <span class="nt">&quot;Type&quot;</span><span class="p">:</span><span class="s2">&quot;AWS::AutoScaling::AutoScalingGroup&quot;</span><span class="p">,</span>
+</div><div class='line'>      <span class="nt">&quot;Properties&quot;</span><span class="p">:{</span>
+</div><div class='line'>        <span class="nt">&quot;AvailabilityZones&quot;</span><span class="p">:{</span>
+</div><div class='line'>          <span class="nt">&quot;Fn::GetAZs&quot;</span><span class="p">:</span><span class="s2">&quot;&quot;</span>
+</div><div class='line'>        <span class="p">},</span>
+</div><div class='line'>        <span class="nt">&quot;LaunchConfigurationName&quot;</span><span class="p">:{</span>
+</div><div class='line'>          <span class="nt">&quot;Ref&quot;</span><span class="p">:</span><span class="s2">&quot;LaunchConfig&quot;</span>
+</div><div class='line'>        <span class="p">},</span>
+</div><div class='line'>        <span class="nt">&quot;MinSize&quot;</span><span class="p">:{</span>
+</div><div class='line'>          <span class="nt">&quot;Ref&quot;</span><span class="p">:</span><span class="s2">&quot;MinGroupSize&quot;</span>
+</div><div class='line'>        <span class="p">},</span>
+</div><div class='line'>        <span class="nt">&quot;MaxSize&quot;</span><span class="p">:{</span>
+</div><div class='line'>          <span class="nt">&quot;Ref&quot;</span><span class="p">:</span><span class="s2">&quot;MaxGroupSize&quot;</span>
+</div><div class='line'>        <span class="p">},</span>
+</div><div class='line'>        <span class="nt">&quot;LoadBalancerNames&quot;</span><span class="p">:[</span>
+</div><div class='line'>          <span class="p">{</span>
+</div><div class='line'>            <span class="nt">&quot;Ref&quot;</span><span class="p">:</span><span class="s2">&quot;ElasticLoadBalancer&quot;</span>
+</div><div class='line'>          <span class="p">}</span>
+</div><div class='line'>        <span class="p">],</span>
+</div><div class='line'>        <span class="nt">&quot;Cooldown&quot;</span><span class="p">:</span><span class="s2">&quot;120&quot;</span><span class="p">,</span>
+</div><div class='line'>        <span class="nt">&quot;Tags&quot;</span><span class="p">:[</span>
+</div><div class='line'>          <span class="p">{</span>
+</div><div class='line'>            <span class="nt">&quot;Key&quot;</span><span class="p">:</span><span class="s2">&quot;Name&quot;</span><span class="p">,</span>
+</div><div class='line'>            <span class="nt">&quot;Value&quot;</span><span class="p">:</span><span class="s2">&quot;MyServerType&quot;</span><span class="p">,</span>
+</div><div class='line'>            <span class="nt">&quot;PropagateAtLaunch&quot;</span><span class="p">:</span><span class="s2">&quot;true&quot;</span>
+</div><div class='line'>          <span class="p">},</span>
+</div><div class='line'>          <span class="p">{</span>
+</div><div class='line'>            <span class="nt">&quot;Key&quot;</span><span class="p">:</span><span class="s2">&quot;User&quot;</span><span class="p">,</span>
+</div><div class='line'>            <span class="nt">&quot;Value&quot;</span><span class="p">:</span><span class="s2">&quot;Customers&quot;</span><span class="p">,</span>
+</div><div class='line'>            <span class="nt">&quot;PropagateAtLaunch&quot;</span><span class="p">:</span><span class="s2">&quot;true&quot;</span>
+</div><div class='line'>          <span class="p">}</span>
+</div><div class='line'>        <span class="p">],</span>
+</div><div class='line marked start'>        <span class="nt">&quot;NotificationConfiguration&quot;</span><span class="p">:{</span>
+</div><div class='line marked'>          <span class="nt">&quot;TopicARN&quot;</span><span class="p">:{</span>
+</div><div class='line marked'>            <span class="nt">&quot;Fn::Join&quot;</span><span class="p">:[</span>
+</div><div class='line marked'>              <span class="s2">&quot;:&quot;</span><span class="p">,</span>
+</div><div class='line marked'>              <span class="p">[</span>
+</div><div class='line marked'>                <span class="s2">&quot;arn:aws:sns&quot;</span><span class="p">,</span>
+</div><div class='line marked'>                <span class="p">{</span>
+</div><div class='line marked'>                  <span class="nt">&quot;Ref&quot;</span><span class="p">:</span><span class="s2">&quot;AWS::Region&quot;</span>
+</div><div class='line marked'>                <span class="p">},</span>
+</div><div class='line marked'>                <span class="p">{</span>
+</div><div class='line marked'>                  <span class="nt">&quot;Fn::FindInMap&quot;</span><span class="p">:[</span>
+</div><div class='line marked'>                    <span class="s2">&quot;AWSAccountInfo&quot;</span><span class="p">,</span>
+</div><div class='line marked'>                    <span class="p">{</span>
+</div><div class='line marked'>                      <span class="nt">&quot;Ref&quot;</span><span class="p">:</span><span class="s2">&quot;AwsAccount&quot;</span>
+</div><div class='line marked'>                    <span class="p">},</span>
+</div><div class='line marked'>                    <span class="s2">&quot;accountId&quot;</span>
+</div><div class='line marked'>                  <span class="p">]</span>
+</div><div class='line marked'>                <span class="p">},</span>
+</div><div class='line marked'>                <span class="s2">&quot;notification&quot;</span>
+</div><div class='line marked'>              <span class="p">]</span>
+</div><div class='line marked'>            <span class="p">]</span>
+</div><div class='line marked end'>          <span class="p">},</span>
+</div><div class='line'>          <span class="nt">&quot;NotificationTypes&quot;</span><span class="p">:[</span>
+</div><div class='line'>            <span class="s2">&quot;autoscaling:EC2_INSTANCE_LAUNCH&quot;</span><span class="p">,</span>
+</div><div class='line'>            <span class="s2">&quot;autoscaling:EC2_INSTANCE_LAUNCH_ERROR&quot;</span><span class="p">,</span>
+</div><div class='line'>            <span class="s2">&quot;autoscaling:EC2_INSTANCE_TERMINATE&quot;</span><span class="p">,</span>
+</div><div class='line'>            <span class="s2">&quot;autoscaling:EC2_INSTANCE_TERMINATE_ERROR&quot;</span>
+</div><div class='line'>          <span class="p">]</span>
+</div><div class='line'>        <span class="p">}</span>
+</div><div class='line'>      <span class="p">}</span>
+</div><div class='line'>    <span class="p">},</span>
+</div></pre></td></tr></table></div></figure></p>
+
+<p>Next we define our launch configuration for our instance in our autoscaling group.
+Notice how we setup the environment in &ldquo;UserData&rdquo; to the one corresponding to the AWS account
+we are using.
+<figure class='code'><figcaption>cf.json</figcaption><div class='highlight'><table><tr><td class='line-numbers' aria-hidden='true'><pre><div data-line='138' class='line-number'></div><div data-line='139' class='line-number'></div><div data-line='140' class='line-number'></div><div data-line='141' class='line-number'></div><div data-line='142' class='line-number'></div><div data-line='143' class='line-number'></div><div data-line='144' class='line-number'></div><div data-line='145' class='line-number'></div><div data-line='146' class='line-number'></div><div data-line='147' class='line-number'></div><div data-line='148' class='line-number'></div><div data-line='149' class='line-number'></div><div data-line='150' class='line-number'></div><div data-line='151' class='line-number'></div><div data-line='152' class='line-number'></div><div data-line='153' class='line-number'></div><div data-line='154' class='line-number'></div><div data-line='155' class='line-number'></div><div data-line='156' class='line-number'></div><div data-line='157' class='line-number'></div><div data-line='158' class='line-number'></div><div data-line='159' class='line-number'></div><div data-line='160' class='line-number'></div><div data-line='161' class='line-number'></div><div data-line='162' class='line-number'></div><div data-line='163' class='line-number'></div><div data-line='164' class='line-number'></div><div data-line='165' class='line-number'></div><div data-line='166' class='line-number'></div><div data-line='167' class='line-number'></div><div data-line='168' class='line-number'></div><div data-line='169' class='line-number'></div><div data-line='170' class='line-number'></div><div data-line='171' class='line-number'></div><div data-line='172' class='line-number'></div><div data-line='173' class='line-number'></div><div data-line='174' class='line-number'></div><div data-line='175' class='line-number'></div><div data-line='176' class='line-number'></div><div data-line='177' class='line-number'></div><div data-line='178' class='line-number'></div><div data-line='179' class='line-number'></div><div data-line='180' class='line-number'></div><div data-line='181' class='line-number'></div><div data-line='182' class='line-number'></div><div data-line='183' class='line-number'></div></pre></td><td class='main  json'><pre><div class='line'>    <span class="s2">&quot;LaunchConfig&quot;</span><span class="err">:</span> <span class="p">{</span>
+</div><div class='line'>      <span class="nt">&quot;Type&quot;</span><span class="p">:</span><span class="s2">&quot;AWS::AutoScaling::LaunchConfiguration&quot;</span><span class="p">,</span>
+</div><div class='line'>      <span class="nt">&quot;Properties&quot;</span><span class="p">:</span> <span class="p">{</span>
+</div><div class='line'>        <span class="nt">&quot;KeyName&quot;</span><span class="p">:</span> <span class="p">{</span>
+</div><div class='line'>          <span class="nt">&quot;Fn::FindInMap&quot;</span><span class="p">:</span> <span class="p">[</span>
+</div><div class='line'>            <span class="s2">&quot;AWSAccountInfo&quot;</span><span class="p">,</span>
+</div><div class='line'>            <span class="p">{</span>
+</div><div class='line'>              <span class="nt">&quot;Ref&quot;</span><span class="p">:</span><span class="s2">&quot;AwsAccount&quot;</span>
+</div><div class='line'>            <span class="p">},</span>
+</div><div class='line'>            <span class="s2">&quot;keypair&quot;</span>
+</div><div class='line'>          <span class="p">]</span>
+</div><div class='line'>        <span class="p">},</span>
+</div><div class='line'>        <span class="nt">&quot;ImageId&quot;</span><span class="p">:{</span>
+</div><div class='line'>          <span class="nt">&quot;Fn::FindInMap&quot;</span><span class="p">:[</span>
+</div><div class='line'>            <span class="p">{</span>
+</div><div class='line'>              <span class="nt">&quot;Ref&quot;</span><span class="p">:</span><span class="s2">&quot;AwsAccount&quot;</span>
+</div><div class='line'>            <span class="p">},</span>
+</div><div class='line'>            <span class="p">{</span>
+</div><div class='line'>              <span class="nt">&quot;Ref&quot;</span><span class="p">:</span><span class="s2">&quot;AWS::Region&quot;</span>
+</div><div class='line'>            <span class="p">},</span>
+</div><div class='line'>            <span class="s2">&quot;ami&quot;</span>
+</div><div class='line'>          <span class="p">]</span>
+</div><div class='line'>        <span class="p">},</span>
+</div><div class='line'>        <span class="nt">&quot;SecurityGroups&quot;</span><span class="p">:[</span>
+</div><div class='line'>          <span class="p">{</span>
+</div><div class='line'>            <span class="nt">&quot;Ref&quot;</span><span class="p">:</span><span class="s2">&quot;InstanceSecurityGroup&quot;</span>
+</div><div class='line'>          <span class="p">}</span>
+</div><div class='line'>        <span class="p">],</span>
+</div><div class='line'>        <span class="nt">&quot;InstanceType&quot;</span><span class="p">:{</span>
+</div><div class='line'>          <span class="nt">&quot;Ref&quot;</span><span class="p">:</span><span class="s2">&quot;InstanceType&quot;</span>
+</div><div class='line'>        <span class="p">},</span>
+</div><div class='line'>        <span class="nt">&quot;IamInstanceProfile&quot;</span><span class="p">:{</span>
+</div><div class='line'>          <span class="nt">&quot;Ref&quot;</span><span class="p">:</span><span class="s2">&quot;DmpInstanceProfile&quot;</span>
+</div><div class='line'>        <span class="p">},</span>
+</div><div class='line'>        <span class="nt">&quot;UserData&quot;</span><span class="p">:</span> <span class="p">{</span>
+</div><div class='line'>          <span class="nt">&quot;Fn::Base64&quot;</span><span class="p">:</span> <span class="p">{</span>
+</div><div class='line'>             <span class="nt">&quot;Fn::Join&quot;</span><span class="p">:</span> <span class="p">[</span>
+</div><div class='line'>                 <span class="s2">&quot;\n&quot;</span><span class="p">,</span>
+</div><div class='line'>                 <span class="p">[</span> <span class="s2">&quot;#!/bin/bash&quot;</span><span class="p">,</span>
+</div><div class='line'>                   <span class="p">{</span> <span class="nt">&quot;Fn::Join&quot;</span><span class="p">:</span> <span class="p">[</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="p">[</span> <span class="s2">&quot;ENV=&#39;&quot;</span><span class="p">,</span> <span class="p">{</span> <span class="nt">&quot;Fn::FindInMap&quot;</span><span class="p">:[</span> <span class="s2">&quot;AWSAccountInfo&quot;</span><span class="p">,</span> <span class="p">{</span> <span class="nt">&quot;Ref&quot;</span><span class="p">:</span><span class="s2">&quot;AwsAccount&quot;</span> <span class="p">},</span> <span class="s2">&quot;envName&quot;</span> <span class="p">]</span> <span class="p">},</span> <span class="s2">&quot;&#39;&quot;</span> <span class="p">]</span> <span class="p">]</span> <span class="p">}</span>
+</div><div class='line'>                 <span class="p">]</span>
+</div><div class='line'>             <span class="p">]</span>
+</div><div class='line'>          <span class="p">}</span>
+</div><div class='line'>        <span class="p">}</span>
+</div><div class='line'>      <span class="p">}</span>
+</div><div class='line'>    <span class="p">}</span><span class="err">,</span>
+</div></pre></td></tr></table></div></figure></p>
+
+<p>Next we define the server scale up and scale down policies for AWS Autoscale.</p>
+
+<p><figure class='code'><figcaption>cf.json</figcaption><div class='highlight'><table><tr><td class='line-numbers' aria-hidden='true'><pre><div data-line='184' class='line-number'></div><div data-line='185' class='line-number'></div><div data-line='186' class='line-number'></div><div data-line='187' class='line-number'></div><div data-line='188' class='line-number'></div><div data-line='189' class='line-number'></div><div data-line='190' class='line-number'></div><div data-line='191' class='line-number'></div><div data-line='192' class='line-number'></div><div data-line='193' class='line-number'></div><div data-line='194' class='line-number'></div><div data-line='195' class='line-number'></div><div data-line='196' class='line-number'></div><div data-line='197' class='line-number'></div><div data-line='198' class='line-number'></div><div data-line='199' class='line-number'></div><div data-line='200' class='line-number'></div><div data-line='201' class='line-number'></div><div data-line='202' class='line-number'></div><div data-line='203' class='line-number'></div><div data-line='204' class='line-number'></div><div data-line='205' class='line-number'></div><div data-line='206' class='line-number'></div><div data-line='207' class='line-number'></div><div data-line='208' class='line-number'></div><div data-line='209' class='line-number'></div><div data-line='210' class='line-number'></div><div data-line='211' class='line-number'></div><div data-line='212' class='line-number'></div><div data-line='213' class='line-number'></div><div data-line='214' class='line-number'></div><div data-line='215' class='line-number'></div><div data-line='216' class='line-number'></div><div data-line='217' class='line-number'></div><div data-line='218' class='line-number'></div><div data-line='219' class='line-number'></div><div data-line='220' class='line-number'></div><div data-line='221' class='line-number'></div><div data-line='222' class='line-number'></div></pre></td><td class='main  json'><pre><div class='line'>    <span class="s2">&quot;ServerScaleUpPolicy&quot;</span><span class="err">:</span><span class="p">{</span>
+</div><div class='line'>      <span class="nt">&quot;Type&quot;</span><span class="p">:</span><span class="s2">&quot;AWS::AutoScaling::ScalingPolicy&quot;</span><span class="p">,</span>
+</div><div class='line'>      <span class="nt">&quot;Properties&quot;</span><span class="p">:{</span>
+</div><div class='line'>        <span class="nt">&quot;AdjustmentType&quot;</span><span class="p">:</span><span class="s2">&quot;ChangeInCapacity&quot;</span><span class="p">,</span>
+</div><div class='line'>        <span class="nt">&quot;AutoScalingGroupName&quot;</span><span class="p">:{</span>
+</div><div class='line'>          <span class="nt">&quot;Ref&quot;</span><span class="p">:</span><span class="s2">&quot;ServerGroup&quot;</span>
+</div><div class='line'>        <span class="p">},</span>
+</div><div class='line'>        <span class="nt">&quot;Cooldown&quot;</span><span class="p">:</span><span class="s2">&quot;60&quot;</span><span class="p">,</span>
+</div><div class='line'>        <span class="nt">&quot;ScalingAdjustment&quot;</span><span class="p">:</span> <span class="p">{</span>
+</div><div class='line'>          <span class="nt">&quot;Fn::Join&quot;</span><span class="p">:[</span>
+</div><div class='line'>            <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="p">[</span>
+</div><div class='line'>              <span class="p">{</span>
+</div><div class='line'>                <span class="nt">&quot;Ref&quot;</span><span class="p">:</span><span class="s2">&quot;MinGroupSize&quot;</span>
+</div><div class='line'>              <span class="p">}</span>
+</div><div class='line'>            <span class="p">]</span>
+</div><div class='line'>          <span class="p">]</span>
+</div><div class='line'>        <span class="p">}</span>
+</div><div class='line'>      <span class="p">}</span>
+</div><div class='line'>    <span class="p">}</span><span class="err">,</span>
+</div><div class='line'>    <span class="s2">&quot;ServerScaleDownPolicy&quot;</span><span class="err">:</span><span class="p">{</span>
+</div><div class='line'>      <span class="nt">&quot;Type&quot;</span><span class="p">:</span><span class="s2">&quot;AWS::AutoScaling::ScalingPolicy&quot;</span><span class="p">,</span>
+</div><div class='line'>      <span class="nt">&quot;Properties&quot;</span><span class="p">:{</span>
+</div><div class='line'>        <span class="nt">&quot;AdjustmentType&quot;</span><span class="p">:</span><span class="s2">&quot;ChangeInCapacity&quot;</span><span class="p">,</span>
+</div><div class='line'>        <span class="nt">&quot;AutoScalingGroupName&quot;</span><span class="p">:{</span>
+</div><div class='line'>          <span class="nt">&quot;Ref&quot;</span><span class="p">:</span><span class="s2">&quot;ServerGroup&quot;</span>
+</div><div class='line'>        <span class="p">},</span>
+</div><div class='line'>        <span class="nt">&quot;Cooldown&quot;</span><span class="p">:</span><span class="s2">&quot;60&quot;</span><span class="p">,</span>
+</div><div class='line'>        <span class="nt">&quot;ScalingAdjustment&quot;</span><span class="p">:</span> <span class="p">{</span>
+</div><div class='line'>          <span class="nt">&quot;Fn::Join&quot;</span><span class="p">:[</span>
+</div><div class='line'>            <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="p">[</span>
+</div><div class='line'>              <span class="s2">&quot;&ndash;&quot;</span><span class="p">,</span>
+</div><div class='line'>              <span class="p">{</span>
+</div><div class='line'>                <span class="nt">&quot;Ref&quot;</span><span class="p">:</span><span class="s2">&quot;MinGroupSize&quot;</span>
+</div><div class='line'>              <span class="p">}</span>
+</div><div class='line'>            <span class="p">]</span>
+</div><div class='line'>          <span class="p">]</span>
+</div><div class='line'>        <span class="p">}</span>
+</div><div class='line'>      <span class="p">}</span>
+</div><div class='line'>    <span class="p">}</span><span class="err">,</span>
+</div></pre></td></tr></table></div></figure></p>
+
+<p>Then we define some alarms.</p>
+
+<p><figure class='code'><figcaption>cf.json</figcaption><div class='highlight'><table><tr><td class='line-numbers' aria-hidden='true'><pre><div data-line='223' class='line-number'></div><div data-line='224' class='line-number'></div><div data-line='225' class='line-number'></div><div data-line='226' class='line-number'></div><div data-line='227' class='line-number'></div><div data-line='228' class='line-number'></div><div data-line='229' class='line-number'></div><div data-line='230' class='line-number'></div><div data-line='231' class='line-number'></div><div data-line='232' class='line-number'></div><div data-line='233' class='line-number'></div><div data-line='234' class='line-number'></div><div data-line='235' class='line-number'></div><div data-line='236' class='line-number'></div><div data-line='237' class='line-number'></div><div data-line='238' class='line-number'></div><div data-line='239' class='line-number'></div><div data-line='240' class='line-number'></div><div data-line='241' class='line-number'></div><div data-line='242' class='line-number'></div><div data-line='243' class='line-number'></div><div data-line='244' class='line-number'></div><div data-line='245' class='line-number'></div><div data-line='246' class='line-number'></div><div data-line='247' class='line-number'></div><div data-line='248' class='line-number'></div><div data-line='249' class='line-number'></div><div data-line='250' class='line-number'></div><div data-line='251' class='line-number'></div><div data-line='252' class='line-number'></div><div data-line='253' class='line-number'></div><div data-line='254' class='line-number'></div><div data-line='255' class='line-number'></div><div data-line='256' class='line-number'></div><div data-line='257' class='line-number'></div><div data-line='258' class='line-number'></div><div data-line='259' class='line-number'></div><div data-line='260' class='line-number'></div><div data-line='261' class='line-number'></div><div data-line='262' class='line-number'></div><div data-line='263' class='line-number'></div><div data-line='264' class='line-number'></div><div data-line='265' class='line-number'></div><div data-line='266' class='line-number'></div><div data-line='267' class='line-number'></div><div data-line='268' class='line-number'></div><div data-line='269' class='line-number'></div><div data-line='270' class='line-number'></div><div data-line='271' class='line-number'></div><div data-line='272' class='line-number'></div><div data-line='273' class='line-number'></div><div data-line='274' class='line-number'></div></pre></td><td class='main  json'><pre><div class='line'>    <span class="s2">&quot;CPUAlarmHigh&quot;</span><span class="err">:</span><span class="p">{</span>
+</div><div class='line'>      <span class="nt">&quot;Type&quot;</span><span class="p">:</span><span class="s2">&quot;AWS::CloudWatch::Alarm&quot;</span><span class="p">,</span>
+</div><div class='line'>      <span class="nt">&quot;Properties&quot;</span><span class="p">:{</span>
+</div><div class='line'>        <span class="nt">&quot;AlarmDescription&quot;</span><span class="p">:</span><span class="s2">&quot;Scale-up if CPU &gt; 80% for 5 minutes&quot;</span><span class="p">,</span>
+</div><div class='line'>        <span class="nt">&quot;MetricName&quot;</span><span class="p">:</span><span class="s2">&quot;CPUUtilization&quot;</span><span class="p">,</span>
+</div><div class='line'>        <span class="nt">&quot;Namespace&quot;</span><span class="p">:</span><span class="s2">&quot;AWS/EC2&quot;</span><span class="p">,</span>
+</div><div class='line'>        <span class="nt">&quot;Statistic&quot;</span><span class="p">:</span><span class="s2">&quot;Average&quot;</span><span class="p">,</span>
+</div><div class='line'>        <span class="nt">&quot;Period&quot;</span><span class="p">:</span><span class="s2">&quot;300&quot;</span><span class="p">,</span>
+</div><div class='line'>        <span class="nt">&quot;EvaluationPeriods&quot;</span><span class="p">:</span><span class="s2">&quot;2&quot;</span><span class="p">,</span>
+</div><div class='line'>        <span class="nt">&quot;Threshold&quot;</span><span class="p">:</span><span class="s2">&quot;70&quot;</span><span class="p">,</span>
+</div><div class='line'>        <span class="nt">&quot;AlarmActions&quot;</span><span class="p">:[</span>
+</div><div class='line'>          <span class="p">{</span>
+</div><div class='line'>            <span class="nt">&quot;Ref&quot;</span><span class="p">:</span><span class="s2">&quot;ServerScaleUpPolicy&quot;</span>
+</div><div class='line'>          <span class="p">}</span>
+</div><div class='line'>        <span class="p">],</span>
+</div><div class='line'>        <span class="nt">&quot;Dimensions&quot;</span><span class="p">:[</span>
+</div><div class='line'>          <span class="p">{</span>
+</div><div class='line'>            <span class="nt">&quot;Name&quot;</span><span class="p">:</span><span class="s2">&quot;AutoScalingGroupName&quot;</span><span class="p">,</span>
+</div><div class='line'>            <span class="nt">&quot;Value&quot;</span><span class="p">:{</span>
+</div><div class='line'>              <span class="nt">&quot;Ref&quot;</span><span class="p">:</span><span class="s2">&quot;ServerGroup&quot;</span>
+</div><div class='line'>            <span class="p">}</span>
+</div><div class='line'>          <span class="p">}</span>
+</div><div class='line'>        <span class="p">],</span>
+</div><div class='line'>        <span class="nt">&quot;ComparisonOperator&quot;</span><span class="p">:</span><span class="s2">&quot;GreaterThanThreshold&quot;</span>
+</div><div class='line'>      <span class="p">}</span>
+</div><div class='line'>    <span class="p">}</span><span class="err">,</span>
+</div><div class='line'>    <span class="s2">&quot;CPUAlarmLow&quot;</span><span class="err">:</span><span class="p">{</span>
+</div><div class='line'>      <span class="nt">&quot;Type&quot;</span><span class="p">:</span><span class="s2">&quot;AWS::CloudWatch::Alarm&quot;</span><span class="p">,</span>
+</div><div class='line'>      <span class="nt">&quot;Properties&quot;</span><span class="p">:{</span>
+</div><div class='line'>        <span class="nt">&quot;AlarmDescription&quot;</span><span class="p">:</span><span class="s2">&quot;Scale-down if CPU &lt; 20% for 20 minutes&quot;</span><span class="p">,</span>
+</div><div class='line'>        <span class="nt">&quot;MetricName&quot;</span><span class="p">:</span><span class="s2">&quot;CPUUtilization&quot;</span><span class="p">,</span>
+</div><div class='line'>        <span class="nt">&quot;Namespace&quot;</span><span class="p">:</span><span class="s2">&quot;AWS/EC2&quot;</span><span class="p">,</span>
+</div><div class='line'>        <span class="nt">&quot;Statistic&quot;</span><span class="p">:</span><span class="s2">&quot;Average&quot;</span><span class="p">,</span>
+</div><div class='line'>        <span class="nt">&quot;Period&quot;</span><span class="p">:</span><span class="s2">&quot;300&quot;</span><span class="p">,</span>
+</div><div class='line'>        <span class="nt">&quot;EvaluationPeriods&quot;</span><span class="p">:</span><span class="s2">&quot;4&quot;</span><span class="p">,</span>
+</div><div class='line'>        <span class="nt">&quot;Threshold&quot;</span><span class="p">:</span><span class="s2">&quot;20&quot;</span><span class="p">,</span>
+</div><div class='line'>        <span class="nt">&quot;AlarmActions&quot;</span><span class="p">:[</span>
+</div><div class='line'>          <span class="p">{</span>
+</div><div class='line'>            <span class="nt">&quot;Ref&quot;</span><span class="p">:</span><span class="s2">&quot;ServerScaleDownPolicy&quot;</span>
+</div><div class='line'>          <span class="p">}</span>
+</div><div class='line'>        <span class="p">],</span>
+</div><div class='line'>        <span class="nt">&quot;Dimensions&quot;</span><span class="p">:[</span>
+</div><div class='line'>          <span class="p">{</span>
+</div><div class='line'>            <span class="nt">&quot;Name&quot;</span><span class="p">:</span><span class="s2">&quot;AutoScalingGroupName&quot;</span><span class="p">,</span>
+</div><div class='line'>            <span class="nt">&quot;Value&quot;</span><span class="p">:{</span>
+</div><div class='line'>              <span class="nt">&quot;Ref&quot;</span><span class="p">:</span><span class="s2">&quot;ServerGroup&quot;</span>
+</div><div class='line'>            <span class="p">}</span>
+</div><div class='line'>          <span class="p">}</span>
+</div><div class='line'>        <span class="p">],</span>
+</div><div class='line'>        <span class="nt">&quot;ComparisonOperator&quot;</span><span class="p">:</span><span class="s2">&quot;LessThanThreshold&quot;</span>
+</div><div class='line'>      <span class="p">}</span>
+</div><div class='line'>    <span class="p">}</span><span class="err">,</span>
+</div></pre></td></tr></table></div></figure></p>
+
+<p>Now we define a Load Balancer.
+<figure class='code'><figcaption>cf.json</figcaption><div class='highlight'><table><tr><td class='line-numbers' aria-hidden='true'><pre><div data-line='275' class='line-number'></div><div data-line='276' class='line-number'></div><div data-line='277' class='line-number'></div><div data-line='278' class='line-number'></div><div data-line='279' class='line-number'></div><div data-line='280' class='line-number'></div><div data-line='281' class='line-number'></div><div data-line='282' class='line-number'></div><div data-line='283' class='line-number'></div><div data-line='284' class='line-number'></div><div data-line='285' class='line-number'></div><div data-line='286' class='line-number'></div><div data-line='287' class='line-number'></div><div data-line='288' class='line-number'></div><div data-line='289' class='line-number'></div><div data-line='290' class='line-number'></div><div data-line='291' class='line-number'></div><div data-line='292' class='line-number'></div><div data-line='293' class='line-number'></div><div data-line='294' class='line-number'></div><div data-line='295' class='line-number'></div><div data-line='296' class='line-number'></div></pre></td><td class='main  json'><pre><div class='line'>    <span class="s2">&quot;ElasticLoadBalancer&quot;</span><span class="err">:</span><span class="p">{</span>
+</div><div class='line'>      <span class="nt">&quot;Type&quot;</span><span class="p">:</span><span class="s2">&quot;AWS::ElasticLoadBalancing::LoadBalancer&quot;</span><span class="p">,</span>
+</div><div class='line'>      <span class="nt">&quot;Properties&quot;</span><span class="p">:{</span>
+</div><div class='line'>        <span class="nt">&quot;AvailabilityZones&quot;</span><span class="p">:{</span>
+</div><div class='line'>          <span class="nt">&quot;Fn::GetAZs&quot;</span><span class="p">:</span><span class="s2">&quot;&quot;</span>
+</div><div class='line'>        <span class="p">},</span>
+</div><div class='line'>        <span class="nt">&quot;Listeners&quot;</span><span class="p">:[</span>
+</div><div class='line'>          <span class="p">{</span>
+</div><div class='line'>            <span class="nt">&quot;LoadBalancerPort&quot;</span><span class="p">:</span><span class="s2">&quot;80&quot;</span><span class="p">,</span>
+</div><div class='line'>            <span class="nt">&quot;InstancePort&quot;</span><span class="p">:</span><span class="s2">&quot;80&quot;</span><span class="p">,</span>
+</div><div class='line'>            <span class="nt">&quot;Protocol&quot;</span><span class="p">:</span><span class="s2">&quot;HTTP&quot;</span>
+</div><div class='line'>          <span class="p">}</span>
+</div><div class='line'>        <span class="p">],</span>
+</div><div class='line'>        <span class="nt">&quot;HealthCheck&quot;</span><span class="p">:{</span>
+</div><div class='line'>          <span class="nt">&quot;Target&quot;</span><span class="p">:</span><span class="s2">&quot;<a href="HTTP:80/status&amp;quot;">HTTP:80/status&amp;quot;</a></span><span class="p">,</span>
+</div><div class='line'>          <span class="nt">&quot;HealthyThreshold&quot;</span><span class="p">:</span><span class="s2">&quot;3&quot;</span><span class="p">,</span>
+</div><div class='line'>          <span class="nt">&quot;UnhealthyThreshold&quot;</span><span class="p">:</span><span class="s2">&quot;3&quot;</span><span class="p">,</span>
+</div><div class='line'>          <span class="nt">&quot;Interval&quot;</span><span class="p">:</span><span class="s2">&quot;30&quot;</span><span class="p">,</span>
+</div><div class='line'>          <span class="nt">&quot;Timeout&quot;</span><span class="p">:</span><span class="s2">&quot;5&quot;</span>
+</div><div class='line'>        <span class="p">}</span>
+</div><div class='line'>      <span class="p">}</span>
+</div><div class='line'>    <span class="p">}</span><span class="err">,</span>
+</div></pre></td></tr></table></div></figure></p>
+
+<p>Now Security Groups and Security Policies.
+Notice the security group policy for the the
+RDS backend DB.
+An RDS instance can also be added to this template.</p>
+
+<p><figure class='code'><figcaption>cf.json</figcaption><div class='highlight'><table><tr><td class='line-numbers' aria-hidden='true'><pre><div data-line='297' class='line-number'></div><div data-line='298' class='line-number'></div><div data-line='299' class='line-number'></div><div data-line='300' class='line-number'></div><div data-line='301' class='line-number'></div><div data-line='302' class='line-number'></div><div data-line='303' class='line-number'></div><div data-line='304' class='line-number'></div><div data-line='305' class='line-number'></div><div data-line='306' class='line-number'></div><div data-line='307' class='line-number'></div><div data-line='308' class='line-number'></div><div data-line='309' class='line-number'></div><div data-line='310' class='line-number'></div><div data-line='311' class='line-number'></div><div data-line='312' class='line-number'></div><div data-line='313' class='line-number'></div><div data-line='314' class='line-number'></div><div data-line='315' class='line-number'></div><div data-line='316' class='line-number'></div><div data-line='317' class='line-number'></div><div data-line='318' class='line-number'></div><div data-line='319' class='line-number'></div><div data-line='320' class='line-number'></div><div data-line='321' class='line-number'></div><div data-line='322' class='line-number'></div><div data-line='323' class='line-number'></div><div data-line='324' class='line-number'></div><div data-line='325' class='line-number'></div><div data-line='326' class='line-number'></div><div data-line='327' class='line-number'></div><div data-line='328' class='line-number'></div><div data-line='329' class='line-number'></div><div data-line='330' class='line-number'></div><div data-line='331' class='line-number'></div><div data-line='332' class='line-number'></div><div data-line='333' class='line-number'></div><div data-line='334' class='line-number'></div><div data-line='335' class='line-number'></div><div data-line='336' class='line-number'></div></pre></td><td class='main  json'><pre><div class='line'>    <span class="s2">&quot;InstanceSecurityGroup&quot;</span><span class="err">:</span><span class="p">{</span>
+</div><div class='line'>      <span class="nt">&quot;Type&quot;</span><span class="p">:</span><span class="s2">&quot;AWS::EC2::SecurityGroup&quot;</span><span class="p">,</span>
+</div><div class='line'>      <span class="nt">&quot;Properties&quot;</span><span class="p">:{</span>
+</div><div class='line'>        <span class="nt">&quot;GroupDescription&quot;</span><span class="p">:</span><span class="s2">&quot;Server access&quot;</span><span class="p">,</span>
+</div><div class='line'>        <span class="nt">&quot;SecurityGroupIngress&quot;</span><span class="p">:[</span>
+</div><div class='line'>          <span class="p">{</span>
+</div><div class='line'>            <span class="nt">&quot;IpProtocol&quot;</span><span class="p">:</span><span class="s2">&quot;tcp&quot;</span><span class="p">,</span>
+</div><div class='line'>            <span class="nt">&quot;FromPort&quot;</span><span class="p">:</span><span class="s2">&quot;22&quot;</span><span class="p">,</span>
+</div><div class='line'>            <span class="nt">&quot;ToPort&quot;</span><span class="p">:</span><span class="s2">&quot;22&quot;</span><span class="p">,</span>
+</div><div class='line'>            <span class="nt">&quot;CidrIp&quot;</span><span class="p">:</span><span class="s2">&quot;0.0.0.0/0&quot;</span>
+</div><div class='line'>          <span class="p">},</span>
+</div><div class='line'>          <span class="p">{</span>
+</div><div class='line'>            <span class="nt">&quot;IpProtocol&quot;</span><span class="p">:</span><span class="s2">&quot;tcp&quot;</span><span class="p">,</span>
+</div><div class='line'>            <span class="nt">&quot;FromPort&quot;</span><span class="p">:</span><span class="s2">&quot;80&quot;</span><span class="p">,</span>
+</div><div class='line'>            <span class="nt">&quot;ToPort&quot;</span><span class="p">:</span><span class="s2">&quot;80&quot;</span><span class="p">,</span>
+</div><div class='line'>            <span class="nt">&quot;SourceSecurityGroupOwnerId&quot;</span><span class="p">:{</span>
+</div><div class='line'>              <span class="nt">&quot;Fn::GetAtt&quot;</span><span class="p">:[</span>
+</div><div class='line'>                <span class="s2">&quot;ElasticLoadBalancer&quot;</span><span class="p">,</span>
+</div><div class='line'>                <span class="s2">&quot;SourceSecurityGroup.OwnerAlias&quot;</span>
+</div><div class='line'>              <span class="p">]</span>
+</div><div class='line'>            <span class="p">},</span>
+</div><div class='line'>            <span class="nt">&quot;SourceSecurityGroupName&quot;</span><span class="p">:{</span>
+</div><div class='line'>              <span class="nt">&quot;Fn::GetAtt&quot;</span><span class="p">:[</span>
+</div><div class='line'>                <span class="s2">&quot;ElasticLoadBalancer&quot;</span><span class="p">,</span>
+</div><div class='line'>                <span class="s2">&quot;SourceSecurityGroup.GroupName&quot;</span>
+</div><div class='line'>              <span class="p">]</span>
+</div><div class='line'>            <span class="p">}</span>
+</div><div class='line'>          <span class="p">}</span>
+</div><div class='line'>        <span class="p">]</span>
+</div><div class='line'>      <span class="p">}</span>
+</div><div class='line'>    <span class="p">}</span><span class="err">,</span>
+</div><div class='line'>    <span class="s2">&quot;RdsIngress&quot;</span><span class="err">:</span><span class="p">{</span>
+</div><div class='line'>      <span class="nt">&quot;Type&quot;</span><span class="p">:</span><span class="s2">&quot;AWS::RDS::DBSecurityGroupIngress&quot;</span><span class="p">,</span>
+</div><div class='line'>      <span class="nt">&quot;Properties&quot;</span><span class="p">:{</span>
+</div><div class='line'>        <span class="nt">&quot;DBSecurityGroupName&quot;</span><span class="p">:</span><span class="s2">&quot;web-dbbackend&quot;</span><span class="p">,</span>
+</div><div class='line'>        <span class="nt">&quot;EC2SecurityGroupName&quot;</span><span class="p">:{</span>
+</div><div class='line'>          <span class="nt">&quot;Ref&quot;</span><span class="p">:</span><span class="s2">&quot;InstanceSecurityGroup&quot;</span>
+</div><div class='line'>        <span class="p">}</span>
+</div><div class='line'>      <span class="p">}</span>
+</div><div class='line'>    <span class="p">}</span>
+</div></pre></td></tr></table></div></figure></p>
+
+<p>Finally some outputs.</p>
+
+<p><figure class='code'><figcaption>cf.json</figcaption><div class='highlight'><table><tr><td class='line-numbers' aria-hidden='true'><pre><div data-line='337' class='line-number'></div><div data-line='338' class='line-number'></div><div data-line='339' class='line-number'></div><div data-line='340' class='line-number'></div><div data-line='341' class='line-number'></div><div data-line='342' class='line-number'></div><div data-line='343' class='line-number'></div><div data-line='344' class='line-number'></div><div data-line='345' class='line-number'></div><div data-line='346' class='line-number'></div><div data-line='347' class='line-number'></div><div data-line='348' class='line-number'></div><div data-line='349' class='line-number'></div><div data-line='350' class='line-number'></div><div data-line='351' class='line-number'></div><div data-line='352' class='line-number'></div><div data-line='353' class='line-number'></div><div data-line='354' class='line-number'></div><div data-line='355' class='line-number'></div><div data-line='356' class='line-number'></div><div data-line='357' class='line-number'></div></pre></td><td class='main  json'><pre><div class='line'>  <span class="err">},</span>
+</div><div class='line'>  <span class="s2">&quot;Outputs&quot;</span><span class="err">:</span><span class="p">{</span>
+</div><div class='line'>    <span class="nt">&quot;URL&quot;</span><span class="p">:{</span>
+</div><div class='line'>      <span class="nt">&quot;Description&quot;</span><span class="p">:</span><span class="s2">&quot;The URL of the ELB&quot;</span><span class="p">,</span>
+</div><div class='line'>      <span class="nt">&quot;Value&quot;</span><span class="p">:{</span>
+</div><div class='line'>        <span class="nt">&quot;Fn::Join&quot;</span><span class="p">:[</span>
+</div><div class='line'>          <span class="s2">&quot;&quot;</span><span class="p">,</span>
+</div><div class='line'>          <span class="p">[</span>
+</div><div class='line'>            <span class="s2">&quot;<a href="http://&amp;quot;">http://&amp;quot;</a></span><span class="p">,</span>
+</div><div class='line'>            <span class="p">{</span>
+</div><div class='line'>              <span class="nt">&quot;Fn::GetAtt&quot;</span><span class="p">:[</span>
+</div><div class='line'>                <span class="s2">&quot;ElasticLoadBalancer&quot;</span><span class="p">,</span>
+</div><div class='line'>                <span class="s2">&quot;DNSName&quot;</span>
+</div><div class='line'>              <span class="p">]</span>
+</div><div class='line'>            <span class="p">}</span>
+</div><div class='line'>          <span class="p">]</span>
+</div><div class='line'>        <span class="p">]</span>
+</div><div class='line'>      <span class="p">}</span>
+</div><div class='line'>    <span class="p">}</span>
+</div><div class='line'>  <span class="p">}</span>
+</div><div class='line'><span class="err">}</span>
+</div></pre></td></tr></table></div></figure></p>
+
+<p>To verify that syntax of your JSON script, save the full file to something
+like <code>cf.json</code> and run: <code>cat cf.json | python -mjson.tool</code></p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Ricardo Aravena</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-10-24T14:03:00-07:00" pubdate data-updated="true">Oct 24<span>th</span>, 2013</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/aws/'>aws</a>, <a class='category' href='/blog/categories/cloudformation/'>cloudformation</a>, <a class='category' href='/blog/categories/json/'>json</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://raravena80.github.io/blog/2013/10/24/simple-clouformation-with-multiple-aws-accounts/" data-via="raravena80" data-counturl="http://raravena80.github.io/blog/2013/10/24/simple-clouformation-with-multiple-aws-accounts/" >Tweet</a>
+  
+  
+  <div class="g-plusone" data-size="medium"></div>
+  
+  
+    <div class="fb-like" data-send="true" data-width="450" data-show-faces="false"></div>
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2013/10/22/ansible-playbook-for-scout-on-ubuntu/" title="Previous Post: Ansible Playbook for Scout on Ubuntu">&laquo; Ansible Playbook for Scout on Ubuntu</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2013/10/29/ansible-playbook-for-papertrail-on-ubuntu/" title="Next Post: Ansible Playbook for PaperTrail on Ubuntu">Ansible Playbook for PaperTrail on Ubuntu &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    
+<section>
+	<span>
+		<img style="margin-left: 10px; margin-top: 10px;" src="http://www.gravatar.com/avatar/0656a4e62f16a7a102ffee3ec6b8aeaa" alt="Gravatar of Ricardo Aravena " title="Gravatar of Ricardo Aravena" />
+	</span>
+</section>
+
+<section>
+  <h1>About Me</h1>
+  <p>DevOps Hacker, Automation Fanatic.</p>
+  <p> Currently, working with Ansible, bash, Cloudera, AWS, Rackspace, etc</p>
+  <p><a href="https://twitter.com/admobius">@Admobius</a>, San Mateo, CA.</p>
+</section>
+<section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/10/29/ansible-playbook-for-papertrail-on-ubuntu/">Ansible Playbook for PaperTrail on Ubuntu</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/10/24/simple-clouformation-with-multiple-aws-accounts/">Simple Clouformation With Multiple AWS Accounts</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/10/22/ansible-playbook-for-scout-on-ubuntu/">Ansible Playbook for Scout on Ubuntu</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/10/21/upgrade-linux-kernel-on-chromebook/">Upgrade Linux Kernel on Chromebook</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/10/21/setup-a-simple-haproxy-config/">Setup a Simple HAProxy Config</a>
+      </li>
+    
+  </ul>
+</section>
+
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/raravena80">@raravena80</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'raravena80',
+            count: 5,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+<section>
+  <h1>On Delicious</h1>
+  <div id="delicious"></div>
+  <script type="text/javascript" src="http://feeds.delicious.com/v2/json/raravena80?count=3&amp;sort=date&amp;callback=renderDeliciousLinks"></script>
+  <p><a href="http://delicious.com/raravena80">My Delicious Bookmarks &raquo;</a></p>
+</section>
+
+
+<section>
+  <h1>Twitter</h1>
+  
+    <a href="//twitter.com/raravena80" class="twitter-follow-button" data-show-count="">Follow @raravena80</a>
+  
+  <!-- <ul id="tweets" data-user="raravena80" data-count="" data-replies="">
+    <li class="loading">Status updating...</li>
+  </ul> -->
+</section>
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Ricardo Aravena -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'raravena80';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://raravena80.github.io/blog/2013/10/24/simple-clouformation-with-multiple-aws-accounts/';
+        var disqus_url = 'http://raravena80.github.io/blog/2013/10/24/simple-clouformation-with-multiple-aws-accounts/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) {return;}
+  js = d.createElement(s); js.id = id; js.async = true;
+  js.src = "//connect.facebook.net/en_US/all.js#appId=212934732101925&xfbml=1";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+
+
+
+  <script type="text/javascript">
+    (function() {
+      var script = document.createElement('script'); script.type = 'text/javascript'; script.async = true;
+      script.src = 'https://apis.google.com/js/plusone.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(script, s);
+    })();
+  </script>
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

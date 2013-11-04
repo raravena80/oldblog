@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: linux kernel | Ricardo Aravena's Blog]]></title>
+  <link href="http://raravena80.github.io/blog/categories/linux-kernel/atom.xml" rel="self"/>
+  <link href="http://raravena80.github.io/"/>
+  <updated>2013-10-29T13:55:49-07:00</updated>
+  <id>http://raravena80.github.io/</id>
+  <author>
+    <name><![CDATA[Ricardo Aravena]]></name>
+    <email><![CDATA[raravena80@yahoo.com]]></email>
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Upgrade Linux Kernel on Chromebook]]></title>
+    <link href="http://raravena80.github.io/blog/2013/10/21/upgrade-linux-kernel-on-chromebook/"/>
+    <updated>2013-10-21T22:15:00-07:00</updated>
+    <id>http://raravena80.github.io/blog/2013/10/21/upgrade-linux-kernel-on-chromebook</id>
+    <content type="html"><![CDATA[<p>So after installing ChrUbuntu on my Acer C7 Chromebook,
+I&rsquo;m very pleased that with the help of this
+ <a href="http://velvet-underscore.blogspot.com/2013/01/chrubuntu-virtualbox-with-kvm.html">blog</a>
+I was able to upgrade the Linux Kernel to 3.8.11</p>
+
+<p><code>bash uname -a
+raravena@chromebook:~/git/blog-src$ uname -a
+Linux chromebook 3.8.11 #3 SMP Thu Oct 17 07:41:20 PDT 2013 x86_64 x86_64 x86_64 GNU/Linux
+</code></p>
+
+<p>These are the modified steps:</p>
+
+<p>``` bash kernel-upgrade</p>
+
+<h1>!/bin/bash</h1>
+
+<p>set -x</p>
+
+<p>#</p>
+
+<h1>Grab verified boot utilities from ChromeOS.</h1>
+
+<p>#
+mkdir -p /usr/share/vboot
+mount -o ro /dev/sda3 /mnt
+cp /mnt/usr/bin/vbutil<em>* /usr/bin
+mkdir -p /usr/bin/old_bins
+cp /mnt/usr/bin/old_bins/vbutil</em>* /usr/bin/old_bins/.
+cp /mnt/usr/bin/dump_kernel_config /usr/bin
+rsync -avz /mnt/usr/share/vboot/ /usr/share/vboot/
+umount /mnt</p>
+
+<p>#</p>
+
+<h1>On the Acer C7, ChromeOS is 32-bit, so the verified boot binaries need a</h1>
+
+<h1>few 32-bit shared libraries to run under ChrUbuntu, which is 64-bit.</h1>
+
+<p>#
+apt-get install libc6:i386 libssl1.0.0:i386</p>
+
+<p>#</p>
+
+<h1>Fetch ChromeOS kernel sources from the Git repo.</h1>
+
+<p>#
+apt-get install git-core
+cd /usr/src
+git clone  <a href="https://git.chromium.org/git/chromiumos/third_party/kernel-next.git">https://git.chromium.org/git/chromiumos/third_party/kernel-next.git</a>
+cd kernel-next
+git checkout origin/chromeos-3.8</p>
+
+<p>#</p>
+
+<h1>Configure the kernel</h1>
+
+<p>#</p>
+
+<h1>First we patch <code>base.config</code> to set <code>CONFIG_SECURITY_CHROMIUMOS</code></h1>
+
+<h1>to <code>n</code> &hellip;</h1>
+
+<p>cp ./chromeos/config/base.config ./chromeos/config/base.config.orig
+sed -e \
+  &rsquo;s/CONFIG_SECURITY_CHROMIUMOS=y/CONFIG_SECURITY_CHROMIUMOS=n/&lsquo; \
+  ./chromeos/config/base.config.orig > ./chromeos/config/base.config
+./chromeos/scripts/prepareconfig chromeos-intel-pineview
+#</p>
+
+<h1>&hellip; and then we proceed as per Olaf&rsquo;s instructions</h1>
+
+<p>#
+yes &ldquo;&rdquo; | make oldconfig</p>
+
+<p>#</p>
+
+<h1>Build the Ubuntu kernel packages</h1>
+
+<p>#
+apt-get install kernel-package
+make-kpkg kernel_image kernel_headers</p>
+
+<p>#</p>
+
+<h1>Backup current kernel and kernel modules</h1>
+
+<p>#
+tstamp=$(date +%Y-%m-%d-%H%M)
+dd if=/dev/sda6 of=/kernel-backup-$tstamp
+cp -Rp /lib/modules/3.4.0 /lib/modules/3.4.0-backup-$tstamp</p>
+
+<p>#</p>
+
+<h1>Install kernel image and modules from the Ubuntu kernel packages we</h1>
+
+<h1>just created.</h1>
+
+<p>#
+dpkg -i /usr/src/linux-*.deb</p>
+
+<p>#</p>
+
+<h1>Extract old kernel config</h1>
+
+<p>#
+vbutil_kernel &mdash;verify /dev/sda6 &mdash;verbose | tail -1 > /config-$tstamp-orig.txt
+#</p>
+
+<h1>Add <code>disablevmx=off</code> to the command line, so that VMX is enabled (for VirtualBox &amp; Co)</h1>
+
+<p>#
+sed -e &rsquo;s/$/ disablevmx=off/&lsquo; \
+  /config-$tstamp-orig.txt > /config-$tstamp.txt</p>
+
+<p>#</p>
+
+<h1>Wrap the new kernel with the verified block and with the new config.</h1>
+
+<p>#
+vbutil_kernel &mdash;pack /newkernel \
+  &mdash;keyblock /usr/share/vboot/devkeys/kernel.keyblock \
+  &mdash;version 1 \
+  &mdash;signprivate /usr/share/vboot/devkeys/kernel_data_key.vbprivk \
+  &mdash;config=/config-$tstamp.txt \
+  &mdash;vmlinuz /boot/vmlinuz-3.8.11 \
+  &mdash;arch x86_64</p>
+
+<p>#</p>
+
+<h1>Make sure the new kernel verifies OK.</h1>
+
+<p>#
+vbutil_kernel &mdash;verify /newkernel</p>
+
+<p>#</p>
+
+<h1>Copy the new kernel to the KERN-C partition.</h1>
+
+<p>#
+dd if=/newkernel of=/dev/sda6</p>
+
+<p>```</p>
+
+<p>I ran into an error while compiling the kernel, but gladly was able to fix it
+``` diff diffs
+diff &mdash;git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 467c1d1..4ba651d 100644
+&mdash;&ndash; a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1749,7 +1749,7 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,</p>
+
+<pre><code>    bool multicast;
+    u32 info_flags = 0;
+    u16 info_id = 0;
+</code></pre>
+
+<ul>
+<li><pre><code>struct ieee80211_chanctx_conf *chanctx_conf;
+</code></pre></li>
+<li><pre><code>struct ieee80211_chanctx_conf *chanctx_conf = NULL;
+struct ieee80211_sub_if_data *ap_sdata;
+enum ieee80211_band band;
+</code></pre></li>
+</ul>
+
+
+<p>```</p>
+]]></content>
+  </entry>
+  
+</feed>

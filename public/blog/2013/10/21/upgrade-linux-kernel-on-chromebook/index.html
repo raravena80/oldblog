@@ -1,0 +1,433 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Upgrade Linux Kernel on Chromebook - Ricardo Aravena's Blog</title>
+  <meta name="author" content="Ricardo Aravena">
+
+  
+  <meta name="description" content="So after installing ChrUbuntu on my Acer C7 Chromebook,
+I&rsquo;m very pleased that with the help of this blog
+I was able to upgrade the Linux Kernel &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://raravena80.github.io/blog/2013/10/21/upgrade-linux-kernel-on-chromebook">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="Ricardo Aravena's Blog" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Ricardo Aravena's Blog</a></h1>
+  
+    <h2>Blogging for DevOps hackers.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:raravena80.github.io" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Upgrade Linux Kernel on Chromebook</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-10-21T22:15:00-07:00" pubdate data-updated="true">Oct 21<span>st</span>, 2013</time>
+        
+         | <a href="#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>So after installing ChrUbuntu on my Acer C7 Chromebook,
+I&rsquo;m very pleased that with the help of this
+ <a href="http://velvet-underscore.blogspot.com/2013/01/chrubuntu-virtualbox-with-kvm.html">blog</a>
+I was able to upgrade the Linux Kernel to 3.8.11</p>
+
+<p><figure class='code'><figcaption>uname -a</figcaption><div class='highlight'><table><tr><td class='line-numbers' aria-hidden='true'><pre><div data-line='1' class='line-number'></div><div data-line='2' class='line-number'></div></pre></td><td class='main  bash'><pre><div class='line'>raravena@chromebook:~/git/blog-src<span class="nv">$ </span>uname -a
+</div><div class='line'>Linux chromebook 3.8.11 <span class="c">#3 SMP Thu Oct 17 07:41:20 PDT 2013 x86_64 x86_64 x86_64 GNU/Linux</span>
+</div></pre></td></tr></table></div></figure></p>
+
+<p>These are the modified steps:</p>
+
+<p><figure class='code'><figcaption>kernel-upgrade</figcaption><div class='highlight'><table><tr><td class='line-numbers' aria-hidden='true'><pre><div data-line='1' class='line-number'></div><div data-line='2' class='line-number'></div><div data-line='3' class='line-number'></div><div data-line='4' class='line-number'></div><div data-line='5' class='line-number'></div><div data-line='6' class='line-number'></div><div data-line='7' class='line-number'></div><div data-line='8' class='line-number'></div><div data-line='9' class='line-number'></div><div data-line='10' class='line-number'></div><div data-line='11' class='line-number'></div><div data-line='12' class='line-number'></div><div data-line='13' class='line-number'></div><div data-line='14' class='line-number'></div><div data-line='15' class='line-number'></div><div data-line='16' class='line-number'></div><div data-line='17' class='line-number'></div><div data-line='18' class='line-number'></div><div data-line='19' class='line-number'></div><div data-line='20' class='line-number'></div><div data-line='21' class='line-number'></div><div data-line='22' class='line-number'></div><div data-line='23' class='line-number'></div><div data-line='24' class='line-number'></div><div data-line='25' class='line-number'></div><div data-line='26' class='line-number'></div><div data-line='27' class='line-number'></div><div data-line='28' class='line-number'></div><div data-line='29' class='line-number'></div><div data-line='30' class='line-number'></div><div data-line='31' class='line-number'></div><div data-line='32' class='line-number'></div><div data-line='33' class='line-number'></div><div data-line='34' class='line-number'></div><div data-line='35' class='line-number'></div><div data-line='36' class='line-number'></div><div data-line='37' class='line-number'></div><div data-line='38' class='line-number'></div><div data-line='39' class='line-number'></div><div data-line='40' class='line-number'></div><div data-line='41' class='line-number'></div><div data-line='42' class='line-number'></div><div data-line='43' class='line-number'></div><div data-line='44' class='line-number'></div><div data-line='45' class='line-number'></div><div data-line='46' class='line-number'></div><div data-line='47' class='line-number'></div><div data-line='48' class='line-number'></div><div data-line='49' class='line-number'></div><div data-line='50' class='line-number'></div><div data-line='51' class='line-number'></div><div data-line='52' class='line-number'></div><div data-line='53' class='line-number'></div><div data-line='54' class='line-number'></div><div data-line='55' class='line-number'></div><div data-line='56' class='line-number'></div><div data-line='57' class='line-number'></div><div data-line='58' class='line-number'></div><div data-line='59' class='line-number'></div><div data-line='60' class='line-number'></div><div data-line='61' class='line-number'></div><div data-line='62' class='line-number'></div><div data-line='63' class='line-number'></div><div data-line='64' class='line-number'></div><div data-line='65' class='line-number'></div><div data-line='66' class='line-number'></div><div data-line='67' class='line-number'></div><div data-line='68' class='line-number'></div><div data-line='69' class='line-number'></div><div data-line='70' class='line-number'></div><div data-line='71' class='line-number'></div><div data-line='72' class='line-number'></div><div data-line='73' class='line-number'></div><div data-line='74' class='line-number'></div><div data-line='75' class='line-number'></div><div data-line='76' class='line-number'></div><div data-line='77' class='line-number'></div><div data-line='78' class='line-number'></div><div data-line='79' class='line-number'></div><div data-line='80' class='line-number'></div><div data-line='81' class='line-number'></div><div data-line='82' class='line-number'></div><div data-line='83' class='line-number'></div><div data-line='84' class='line-number'></div><div data-line='85' class='line-number'></div><div data-line='86' class='line-number'></div><div data-line='87' class='line-number'></div><div data-line='88' class='line-number'></div><div data-line='89' class='line-number'></div><div data-line='90' class='line-number'></div><div data-line='91' class='line-number'></div><div data-line='92' class='line-number'></div><div data-line='93' class='line-number'></div><div data-line='94' class='line-number'></div><div data-line='95' class='line-number'></div></pre></td><td class='main  bash'><pre><div class='line'><span class="c">#!/bin/bash</span>
+</div><div class='line'> </div><div class='line'><span class="nb">set</span> -x
+</div><div class='line'> </div><div class='line'><span class="c">#</span>
+</div><div class='line'><span class="c"># Grab verified boot utilities from ChromeOS.</span>
+</div><div class='line'><span class="c">#</span>
+</div><div class='line'>mkdir -p /usr/share/vboot
+</div><div class='line'>mount -o ro /dev/sda3 /mnt
+</div><div class='line'>cp /mnt/usr/bin/vbutil<em>* /usr/bin
+</div><div class='line'>mkdir -p /usr/bin/old_bins
+</div><div class='line'>cp /mnt/usr/bin/old_bins/vbutil</em><em> /usr/bin/old_bins/.
+</div><div class='line'>cp /mnt/usr/bin/dump_kernel_config /usr/bin
+</div><div class='line'>rsync -avz /mnt/usr/share/vboot/ /usr/share/vboot/
+</div><div class='line'>umount /mnt
+</div><div class='line'> </div><div class='line'><span class="c">#</span>
+</div><div class='line'><span class="c"># On the Acer C7, ChromeOS is 32-bit, so the verified boot binaries need a</span>
+</div><div class='line'><span class="c"># few 32-bit shared libraries to run under ChrUbuntu, which is 64-bit.</span>
+</div><div class='line'><span class="c">#</span>
+</div><div class='line'>apt-get install libc6:i386 libssl1.0.0:i386
+</div><div class='line'> </div><div class='line'><span class="c">#</span>
+</div><div class='line'><span class="c"># Fetch ChromeOS kernel sources from the Git repo.</span>
+</div><div class='line'><span class="c">#</span>
+</div><div class='line'>apt-get install git-core
+</div><div class='line'><span class="nb">cd</span> /usr/src
+</div><div class='line'>git clone  <a href="https://git.chromium.org/git/chromiumos/third_party/kernel-next.git">https://git.chromium.org/git/chromiumos/third_party/kernel-next.git</a>
+</div><div class='line'><span class="nb">cd </span>kernel-next
+</div><div class='line'>git checkout origin/chromeos-3.8
+</div><div class='line'> </div><div class='line'><span class="c">#</span>
+</div><div class='line'><span class="c"># Configure the kernel</span>
+</div><div class='line'><span class="c">#</span>
+</div><div class='line'><span class="c"># First we patch <code>base.config</code> to set <code>CONFIG_SECURITY_CHROMIUMOS</code></span>
+</div><div class='line'><span class="c"># to <code>n</code> &hellip;</span>
+</div><div class='line'>cp ./chromeos/config/base.config ./chromeos/config/base.config.orig
+</div><div class='line'>sed -e <span class="se">&lt;/span>
+</div><div class='line'>  <span class="s1">&#39;s/CONFIG_SECURITY_CHROMIUMOS=y/CONFIG_SECURITY_CHROMIUMOS=n/&#39;</span> <span class="se">&lt;/span>
+</div><div class='line'>  ./chromeos/config/base.config.orig &gt; ./chromeos/config/base.config
+</div><div class='line'>./chromeos/scripts/prepareconfig chromeos-intel-pineview
+</div><div class='line'><span class="c">#</span>
+</div><div class='line'><span class="c"># &hellip; and then we proceed as per Olaf&#39;s instructions</span>
+</div><div class='line'><span class="c">#</span>
+</div><div class='line'>yes <span class="s2">&quot;&quot;</span> | make oldconfig
+</div><div class='line'> </div><div class='line'><span class="c">#</span>
+</div><div class='line'><span class="c"># Build the Ubuntu kernel packages</span>
+</div><div class='line'><span class="c">#</span>
+</div><div class='line'>apt-get install kernel-package
+</div><div class='line'>make-kpkg kernel_image kernel_headers
+</div><div class='line'> </div><div class='line'><span class="c">#</span>
+</div><div class='line'><span class="c"># Backup current kernel and kernel modules</span>
+</div><div class='line'><span class="c">#</span>
+</div><div class='line'><span class="nv">tstamp</span><span class="o">=</span><span class="k">$(</span>date +%Y-%m-%d-%H%M<span class="k">)</span>
+</div><div class='line'>dd <span class="k">if</span><span class="o">=</span>/dev/sda6 <span class="nv">of</span><span class="o">=</span>/kernel-backup-<span class="nv">$tstamp</span>
+</div><div class='line'>cp -Rp /lib/modules/3.4.0 /lib/modules/3.4.0-backup-<span class="nv">$tstamp</span>
+</div><div class='line'> </div><div class='line'><span class="c">#</span>
+</div><div class='line'><span class="c"># Install kernel image and modules from the Ubuntu kernel packages we</span>
+</div><div class='line'><span class="c"># just created.</span>
+</div><div class='line'><span class="c">#</span>
+</div><div class='line'>dpkg -i /usr/src/linux-</em>.deb
+</div><div class='line'> </div><div class='line'><span class="c">#</span>
+</div><div class='line'><span class="c"># Extract old kernel config</span>
+</div><div class='line'><span class="c">#</span>
+</div><div class='line'>vbutil_kernel &mdash;verify /dev/sda6 &mdash;verbose | tail -1 &gt; /config-<span class="nv">$tstamp</span>-orig.txt
+</div><div class='line'><span class="c">#</span>
+</div><div class='line'><span class="c"># Add <code>disablevmx=off</code> to the command line, so that VMX is enabled (for VirtualBox &amp; Co)</span>
+</div><div class='line'><span class="c">#</span>
+</div><div class='line'>sed -e <span class="s1">&#39;s/$/ disablevmx=off/&#39;</span> <span class="se">&lt;/span>
+</div><div class='line'>  /config-<span class="nv">$tstamp</span>-orig.txt &gt; /config-<span class="nv">$tstamp</span>.txt
+</div><div class='line'> </div><div class='line'><span class="c">#</span>
+</div><div class='line'><span class="c"># Wrap the new kernel with the verified block and with the new config.</span>
+</div><div class='line'><span class="c">#</span>
+</div><div class='line'>vbutil_kernel &mdash;pack /newkernel <span class="se">&lt;/span>
+</div><div class='line'>  &mdash;keyblock /usr/share/vboot/devkeys/kernel.keyblock <span class="se">&lt;/span>
+</div><div class='line'>  &mdash;version 1 <span class="se">&lt;/span>
+</div><div class='line'>  &mdash;signprivate /usr/share/vboot/devkeys/kernel_data_key.vbprivk <span class="se">&lt;/span>
+</div><div class='line'>  &mdash;config<span class="o">=</span>/config-<span class="nv">$tstamp</span>.txt <span class="se">&lt;/span>
+</div><div class='line'>  &mdash;vmlinuz /boot/vmlinuz-3.8.11 <span class="se">&lt;/span>
+</div><div class='line'>  &mdash;arch x86_64
+</div><div class='line'> </div><div class='line'><span class="c">#</span>
+</div><div class='line'><span class="c"># Make sure the new kernel verifies OK.</span>
+</div><div class='line'><span class="c">#</span>
+</div><div class='line'>vbutil_kernel &mdash;verify /newkernel
+</div><div class='line'> </div><div class='line'><span class="c">#</span>
+</div><div class='line'><span class="c"># Copy the new kernel to the KERN-C partition.</span>
+</div><div class='line'><span class="c">#</span>
+</div><div class='line'>dd <span class="k">if</span><span class="o">=</span>/newkernel <span class="nv">of</span><span class="o">=</span>/dev/sda6
+</div></pre></td></tr></table></div></figure></p>
+
+<p>I ran into an error while compiling the kernel, but gladly was able to fix it
+<figure class='code'><figcaption>diffs</figcaption><div class='highlight'><table><tr><td class='line-numbers' aria-hidden='true'><pre><div data-line='1' class='line-number'></div><div data-line='2' class='line-number'></div><div data-line='3' class='line-number'></div><div data-line='4' class='line-number'></div><div data-line='5' class='line-number'></div><div data-line='6' class='line-number'></div><div data-line='7' class='line-number'></div><div data-line='8' class='line-number'></div><div data-line='9' class='line-number'></div><div data-line='10' class='line-number'></div><div data-line='11' class='line-number'></div><div data-line='12' class='line-number'></div><div data-line='13' class='line-number'></div></pre></td><td class='main  diff'><pre><div class='line'><span class="gh">diff &mdash;git a/net/mac80211/tx.c b/net/mac80211/tx.c</span>
+</div><div class='line'><span class="gh">index 467c1d1..4ba651d 100644</span>
+</div><div class='line'><span class="gd">&mdash;&ndash; a/net/mac80211/tx.c</span>
+</div><div class='line'><span class="gi">+++ b/net/mac80211/tx.c</span>
+</div><div class='line'><span class="gu">@@ -1749,7 +1749,7 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff <em>skb,</span>
+</div><div class='line'>        bool multicast;
+</div><div class='line'>        u32 info_flags = 0;
+</div><div class='line'>        u16 info_id = 0;
+</div><div class='line'><span class="gd">&ndash;       struct ieee80211_chanctx_conf </em>chanctx_conf;</span>
+</div><div class='line'><span class="gi">+       struct ieee80211_chanctx_conf <em>chanctx_conf = NULL;</span>
+</div><div class='line'>        struct ieee80211_sub_if_data </em>ap_sdata;
+</div><div class='line'>        enum ieee80211_band band;
+</div><div class='line'> </div></pre></td></tr></table></div></figure></p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Ricardo Aravena</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-10-21T22:15:00-07:00" pubdate data-updated="true">Oct 21<span>st</span>, 2013</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/linux-kernel/'>linux kernel</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://raravena80.github.io/blog/2013/10/21/upgrade-linux-kernel-on-chromebook/" data-via="raravena80" data-counturl="http://raravena80.github.io/blog/2013/10/21/upgrade-linux-kernel-on-chromebook/" >Tweet</a>
+  
+  
+  <div class="g-plusone" data-size="medium"></div>
+  
+  
+    <div class="fb-like" data-send="true" data-width="450" data-show-faces="false"></div>
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2013/10/21/setup-a-simple-haproxy-config/" title="Previous Post: Setup a Simple HAProxy Config">&laquo; Setup a Simple HAProxy Config</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2013/10/22/ansible-playbook-for-scout-on-ubuntu/" title="Next Post: Ansible Playbook for Scout on Ubuntu">Ansible Playbook for Scout on Ubuntu &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    
+<section>
+	<span>
+		<img style="margin-left: 10px; margin-top: 10px;" src="http://www.gravatar.com/avatar/0656a4e62f16a7a102ffee3ec6b8aeaa" alt="Gravatar of Ricardo Aravena " title="Gravatar of Ricardo Aravena" />
+	</span>
+</section>
+
+<section>
+  <h1>About Me</h1>
+  <p>DevOps Hacker, Automation Fanatic.</p>
+  <p> Currently, working with Ansible, bash, Cloudera, AWS, Rackspace, etc</p>
+  <p><a href="https://twitter.com/admobius">@Admobius</a>, San Mateo, CA.</p>
+</section>
+<section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/10/29/ansible-playbook-for-papertrail-on-ubuntu/">Ansible Playbook for PaperTrail on Ubuntu</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/10/24/simple-clouformation-with-multiple-aws-accounts/">Simple Clouformation With Multiple AWS Accounts</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/10/22/ansible-playbook-for-scout-on-ubuntu/">Ansible Playbook for Scout on Ubuntu</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/10/21/upgrade-linux-kernel-on-chromebook/">Upgrade Linux Kernel on Chromebook</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/10/21/setup-a-simple-haproxy-config/">Setup a Simple HAProxy Config</a>
+      </li>
+    
+  </ul>
+</section>
+
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/raravena80">@raravena80</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'raravena80',
+            count: 5,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+<section>
+  <h1>On Delicious</h1>
+  <div id="delicious"></div>
+  <script type="text/javascript" src="http://feeds.delicious.com/v2/json/raravena80?count=3&amp;sort=date&amp;callback=renderDeliciousLinks"></script>
+  <p><a href="http://delicious.com/raravena80">My Delicious Bookmarks &raquo;</a></p>
+</section>
+
+
+<section>
+  <h1>Twitter</h1>
+  
+    <a href="//twitter.com/raravena80" class="twitter-follow-button" data-show-count="">Follow @raravena80</a>
+  
+  <!-- <ul id="tweets" data-user="raravena80" data-count="" data-replies="">
+    <li class="loading">Status updating...</li>
+  </ul> -->
+</section>
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Ricardo Aravena -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'raravena80';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://raravena80.github.io/blog/2013/10/21/upgrade-linux-kernel-on-chromebook/';
+        var disqus_url = 'http://raravena80.github.io/blog/2013/10/21/upgrade-linux-kernel-on-chromebook/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) {return;}
+  js = d.createElement(s); js.id = id; js.async = true;
+  js.src = "//connect.facebook.net/en_US/all.js#appId=212934732101925&xfbml=1";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+
+
+
+  <script type="text/javascript">
+    (function() {
+      var script = document.createElement('script'); script.type = 'text/javascript'; script.async = true;
+      script.src = 'https://apis.google.com/js/plusone.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(script, s);
+    })();
+  </script>
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

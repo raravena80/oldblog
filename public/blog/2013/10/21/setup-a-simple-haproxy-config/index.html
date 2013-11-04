@@ -1,0 +1,396 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Setup a Simple HAProxy Config - Ricardo Aravena's Blog</title>
+  <meta name="author" content="Ricardo Aravena">
+
+  
+  <meta name="description" content="Here&rsquo;s simple haproxy configuration to get you started,
+you probably want to stick this under /etc/haproxy/haproxy.cfg Simple HAProxy &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://raravena80.github.io/blog/2013/10/21/setup-a-simple-haproxy-config">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="Ricardo Aravena's Blog" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Ricardo Aravena's Blog</a></h1>
+  
+    <h2>Blogging for DevOps hackers.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:raravena80.github.io" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Setup a Simple HAProxy Config</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-10-21T00:00:00-07:00" pubdate data-updated="true">Oct 21<span>st</span>, 2013</time>
+        
+         | <a href="#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>Here&rsquo;s simple haproxy configuration to get you started,
+you probably want to stick this under /etc/haproxy/haproxy.cfg</p>
+
+<p><figure class='code'><figcaption>Simple HAProxy Config</figcaption><div class='highlight'><table><tr><td class='line-numbers' aria-hidden='true'><pre><div data-line='1' class='line-number'></div><div data-line='2' class='line-number'></div><div data-line='3' class='line-number'></div><div data-line='4' class='line-number'></div><div data-line='5' class='line-number'></div><div data-line='6' class='line-number'></div><div data-line='7' class='line-number'></div><div data-line='8' class='line-number'></div><div data-line='9' class='line-number'></div><div data-line='10' class='line-number'></div><div data-line='11' class='line-number'></div><div data-line='12' class='line-number'></div><div data-line='13' class='line-number'></div><div data-line='14' class='line-number'></div><div data-line='15' class='line-number'></div><div data-line='16' class='line-number'></div><div data-line='17' class='line-number'></div><div data-line='18' class='line-number'></div><div data-line='19' class='line-number'></div><div data-line='20' class='line-number'></div><div data-line='21' class='line-number'></div><div data-line='22' class='line-number'></div><div data-line='23' class='line-number'></div><div data-line='24' class='line-number'></div><div data-line='25' class='line-number'></div><div data-line='26' class='line-number'></div><div data-line='27' class='line-number'></div><div data-line='28' class='line-number'></div><div data-line='29' class='line-number'></div><div data-line='30' class='line-number'></div><div data-line='31' class='line-number'></div><div data-line='32' class='line-number'></div><div data-line='33' class='line-number'></div><div data-line='34' class='line-number'></div><div data-line='35' class='line-number'></div><div data-line='36' class='line-number'></div><div data-line='37' class='line-number'></div><div data-line='38' class='line-number'></div><div data-line='39' class='line-number'></div><div data-line='40' class='line-number'></div><div data-line='41' class='line-number'></div><div data-line='42' class='line-number'></div><div data-line='43' class='line-number'></div><div data-line='44' class='line-number'></div><div data-line='45' class='line-number'></div><div data-line='46' class='line-number'></div></pre></td><td class='main  plain'><pre><div class='line'>global
+</div><div class='line'>    log 127.0.0.1   local0
+</div><div class='line'>    log 127.0.0.1   local1 notice
+</div><div class='line'>    maxconn 4096
+</div><div class='line'>    user haproxy
+</div><div class='line'>    group haproxy
+</div><div class='line'>    daemon
+</div><div class='line'> </div><div class='line'>defaults
+</div><div class='line'>    log global
+</div><div class='line'>    mode    http
+</div><div class='line'>    option  httplog
+</div><div class='line'>    option  dontlognull
+</div><div class='line'>    retries 3
+</div><div class='line'>    option redispatch
+</div><div class='line'>    maxconn 4096
+</div><div class='line'>    contimeout  5000
+</div><div class='line'>    clitimeout  50000
+</div><div class='line'>    srvtimeout  50000
+</div><div class='line'> </div><div class='line'>   stats enable
+</div><div class='line'>    stats auth      admin:password
+</div><div class='line'>    stats uri       /monitor
+</div><div class='line'>    stats refresh   5s
+</div><div class='line'>    option httpchk  GET /status
+</div><div class='line'>    retries     5
+</div><div class='line'>    option redispatch
+</div><div class='line'>    errorfile   503 /etc/haproxy/errors/503.http
+</div><div class='line'>    errorfile   400 /etc/haproxy/errors/400.http
+</div><div class='line'>    errorfile   403 /etc/haproxy/errors/403.http
+</div><div class='line'>    errorfile   408 /etc/haproxy/errors/408.http
+</div><div class='line'>    errorfile   500 /etc/haproxy/errors/500.http
+</div><div class='line'>    errorfile   502 /etc/haproxy/errors/502.http
+</div><div class='line'>    errorfile   503 /etc/haproxy/errors/503.http
+</div><div class='line'>    errorfile   504 /etc/haproxy/errors/504.http
+</div><div class='line'>    balance roundrobin  # each server is used in turns, according to assigned weight
+</div><div class='line'> </div><div class='line'>listen http-in
+</div><div class='line'>    bind :80
+</div><div class='line'>    monitor-uri   /haproxy  # end point to monitor HAProxy status (returns 200)
+</div><div class='line'> </div><div class='line'>    # option httpclose
+</div><div class='line'>    server server1 server1.mydomain.com:8080 weight 1 maxconn 2000 check inter 4000
+</div><div class='line'>    server server2 server2.mydomain.com:8080 weight 1 maxconn 2000 check inter 4000
+</div><div class='line'>    server server3 server3.mydomain.com:8080 weight 1 maxconn 2000 check inter 4000
+</div><div class='line'>    rspidel ^Set-cookie:\ IP=   # do not let this cookie tell our internal IP address
+</div></pre></td></tr></table></div></figure></p>
+
+<p>You also want to setup logging using rsyslog,
+you can syslog-ng or other loggers too as well,
+but the configuration is different.
+<figure class='code'><figcaption>Rsyslog HAproxy config</figcaption><div class='highlight'><table><tr><td class='line-numbers' aria-hidden='true'><pre><div data-line='1' class='line-number'></div><div data-line='2' class='line-number'></div><div data-line='3' class='line-number'></div><div data-line='4' class='line-number'></div></pre></td><td class='main  plain'><pre><div class='line'># put this in /etc/rsyslog.d/49-haproxy.conf:
+</div><div class='line'>local0.<em> &ndash;/var/log/haproxy/haproxy_0.log
+</div><div class='line'>local1.</em> &ndash;/var/log/haproxy/haproxy_1.log
+</div><div class='line'>&amp; ~</div></pre></td></tr></table></div></figure></p>
+
+<p>Now, setup logrotate (usually under /etc/logrotate.d/haproxy:
+<figure class='code'><figcaption>HAProxy logrotate config</figcaption><div class='highlight'><table><tr><td class='line-numbers' aria-hidden='true'><pre><div data-line='1' class='line-number'></div><div data-line='2' class='line-number'></div><div data-line='3' class='line-number'></div><div data-line='4' class='line-number'></div><div data-line='5' class='line-number'></div><div data-line='6' class='line-number'></div><div data-line='7' class='line-number'></div><div data-line='8' class='line-number'></div><div data-line='9' class='line-number'></div><div data-line='10' class='line-number'></div><div data-line='11' class='line-number'></div><div data-line='12' class='line-number'></div><div data-line='13' class='line-number'></div></pre></td><td class='main  plain'><pre><div class='line'>/var/log/haproxy/haproxy*.log
+</div><div class='line'>{
+</div><div class='line'>    rotate 7
+</div><div class='line'>    weekly
+</div><div class='line'>    missingok
+</div><div class='line'>    notifempty
+</div><div class='line'>    compress
+</div><div class='line'>    delaycompress
+</div><div class='line'>    sharedscripts
+</div><div class='line'>    postrotate
+</div><div class='line'>        reload rsyslog >/dev/null 2>&amp;1 || true
+</div><div class='line'>    endscript
+</div><div class='line'>}</div></pre></td></tr></table></div></figure></p>
+
+<p>You can also use your favorite configuration management tool,
+such as Puppet, Chef or Ansible, to parameterize and template
+the configurations. I use Ansible (I&rsquo;ll explain in a different
+blog)</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Ricardo Aravena</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-10-21T00:00:00-07:00" pubdate data-updated="true">Oct 21<span>st</span>, 2013</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/haproxy/'>haproxy</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://raravena80.github.io/blog/2013/10/21/setup-a-simple-haproxy-config/" data-via="raravena80" data-counturl="http://raravena80.github.io/blog/2013/10/21/setup-a-simple-haproxy-config/" >Tweet</a>
+  
+  
+  <div class="g-plusone" data-size="medium"></div>
+  
+  
+    <div class="fb-like" data-send="true" data-width="450" data-show-faces="false"></div>
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2013/10/21/how-to-create-an-ansible-playbook-to-configure-haproxy/" title="Previous Post: How To Create an Ansible Playbook to Configure HAProxy">&laquo; How To Create an Ansible Playbook to Configure HAProxy</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2013/10/21/upgrade-linux-kernel-on-chromebook/" title="Next Post: Upgrade Linux Kernel on Chromebook">Upgrade Linux Kernel on Chromebook &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    
+<section>
+	<span>
+		<img style="margin-left: 10px; margin-top: 10px;" src="http://www.gravatar.com/avatar/0656a4e62f16a7a102ffee3ec6b8aeaa" alt="Gravatar of Ricardo Aravena " title="Gravatar of Ricardo Aravena" />
+	</span>
+</section>
+
+<section>
+  <h1>About Me</h1>
+  <p>DevOps Hacker, Automation Fanatic.</p>
+  <p> Currently, working with Ansible, bash, Cloudera, AWS, Rackspace, etc</p>
+  <p><a href="https://twitter.com/admobius">@Admobius</a>, San Mateo, CA.</p>
+</section>
+<section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/10/29/ansible-playbook-for-papertrail-on-ubuntu/">Ansible Playbook for PaperTrail on Ubuntu</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/10/24/simple-clouformation-with-multiple-aws-accounts/">Simple Clouformation With Multiple AWS Accounts</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/10/22/ansible-playbook-for-scout-on-ubuntu/">Ansible Playbook for Scout on Ubuntu</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/10/21/upgrade-linux-kernel-on-chromebook/">Upgrade Linux Kernel on Chromebook</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/10/21/setup-a-simple-haproxy-config/">Setup a Simple HAProxy Config</a>
+      </li>
+    
+  </ul>
+</section>
+
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/raravena80">@raravena80</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'raravena80',
+            count: 5,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+<section>
+  <h1>On Delicious</h1>
+  <div id="delicious"></div>
+  <script type="text/javascript" src="http://feeds.delicious.com/v2/json/raravena80?count=3&amp;sort=date&amp;callback=renderDeliciousLinks"></script>
+  <p><a href="http://delicious.com/raravena80">My Delicious Bookmarks &raquo;</a></p>
+</section>
+
+
+<section>
+  <h1>Twitter</h1>
+  
+    <a href="//twitter.com/raravena80" class="twitter-follow-button" data-show-count="">Follow @raravena80</a>
+  
+  <!-- <ul id="tweets" data-user="raravena80" data-count="" data-replies="">
+    <li class="loading">Status updating...</li>
+  </ul> -->
+</section>
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Ricardo Aravena -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'raravena80';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://raravena80.github.io/blog/2013/10/21/setup-a-simple-haproxy-config/';
+        var disqus_url = 'http://raravena80.github.io/blog/2013/10/21/setup-a-simple-haproxy-config/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) {return;}
+  js = d.createElement(s); js.id = id; js.async = true;
+  js.src = "//connect.facebook.net/en_US/all.js#appId=212934732101925&xfbml=1";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+
+
+
+  <script type="text/javascript">
+    (function() {
+      var script = document.createElement('script'); script.type = 'text/javascript'; script.async = true;
+      script.src = 'https://apis.google.com/js/plusone.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(script, s);
+    })();
+  </script>
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

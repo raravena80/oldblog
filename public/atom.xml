@@ -1,0 +1,1037 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Ricardo Aravena's Blog]]></title>
+  <link href="http://raravena80.github.io/atom.xml" rel="self"/>
+  <link href="http://raravena80.github.io/"/>
+  <updated>2013-10-29T13:55:49-07:00</updated>
+  <id>http://raravena80.github.io/</id>
+  <author>
+    <name><![CDATA[Ricardo Aravena]]></name>
+    <email><![CDATA[raravena80@yahoo.com]]></email>
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Ansible Playbook for PaperTrail on Ubuntu]]></title>
+    <link href="http://raravena80.github.io/blog/2013/10/29/ansible-playbook-for-papertrail-on-ubuntu/"/>
+    <updated>2013-10-29T11:54:00-07:00</updated>
+    <id>http://raravena80.github.io/blog/2013/10/29/ansible-playbook-for-papertrail-on-ubuntu</id>
+    <content type="html"><![CDATA[<p>This posts describes how to create a simple
+<a href="http://www.ansiblew">Ansible</a> task
+on how to setup <a href="https://www.scoutapp.com">PaperTrail</a> on Ubuntu.
+Because it&rsquo;s a <code>task</code> it needs to be included in an ansible playbook.</p>
+
+<p>It&rsquo;s a follow up to a previous
+ <a href="http://raravena80.github.io/blog/2013/10/21/how-to-create-an-ansible-playbook-to-configure-haproxy/">blog</a>
+ describing an Ansible Playbook to setup an HAProxy system. This Ansible task can
+ be included in the HAProxy playbook as well as any other playbooks with something
+ like this:</p>
+
+<p><figure class='code'><figcaption>papertrail.yml</figcaption><div class='highlight'><table><tr><td class='line-numbers' aria-hidden='true'><pre><div data-line='1' class='line-number'></div><div data-line='2' class='line-number'></div><div data-line='3' class='line-number'></div><div data-line='4' class='line-number'></div><div data-line='5' class='line-number'></div><div data-line='6' class='line-number'></div><div data-line='7' class='line-number'></div><div data-line='8' class='line-number'></div><div data-line='9' class='line-number'></div><div data-line='10' class='line-number'></div></pre></td><td class='main  yaml'><pre><div class='line'><span class="nn">&mdash;&ndash;</span>
+</div><div class='line'><span class="l-Scalar-Plain">PLAYBOOK</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Install papertrail on Ubuntu</span>
+</div><div class='line'><span class="nn">&mdash;&ndash;</span>
+</div><div class='line'><span class="p-Indicator">&ndash;</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">scout</span>
+</div><div class='line'>  <span class="l-Scalar-Plain">hosts</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">all</span>
+</div><div class='line'>  <span class="l-Scalar-Plain">user</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">&lt;user-with-sudo&gt;</span>
+</div><div class='line'>  <span class="l-Scalar-Plain">sudo</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">True</span>
+</div><div class='line'> </div><div class='line'>  <span class="l-Scalar-Plain">tasks</span><span class="p-Indicator">:</span>
+</div><div class='line'>    <span class="p-Indicator">&ndash;</span> <span class="l-Scalar-Plain">include</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">tasks/papertrail.yml</span>
+</div></pre></td></tr></table></div></figure></p>
+
+<p>Next, we define the <code>task</code> that includes installing the dependencies
+rsyslog and libssl-dev. Also we copy a specific rsyslog configuration
+for papertrail.</p>
+
+<p><figure class='code'><figcaption>papertrail.yml</figcaption><div class='highlight'><table><tr><td class='line-numbers' aria-hidden='true'><pre><div data-line='1' class='line-number'></div><div data-line='2' class='line-number'></div><div data-line='3' class='line-number'></div><div data-line='4' class='line-number'></div><div data-line='5' class='line-number'></div><div data-line='6' class='line-number'></div><div data-line='7' class='line-number'></div><div data-line='8' class='line-number'></div><div data-line='9' class='line-number'></div><div data-line='10' class='line-number'></div><div data-line='11' class='line-number'></div><div data-line='12' class='line-number'></div><div data-line='13' class='line-number'></div><div data-line='14' class='line-number'></div><div data-line='15' class='line-number'></div></pre></td><td class='main  yaml'><pre><div class='line'><span class="nn">&mdash;&ndash;</span>
+</div><div class='line'><span class="c1"># TASK: Papertrail log aggregation</span>
+</div><div class='line'> </div><div class='line'><span class="p-Indicator">&ndash;</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Install dependencies for Papertrail</span>
+</div><div class='line'>  <span class="l-Scalar-Plain">apt</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">pkg=$item state=latest</span>
+</div><div class='line'>  <span class="l-Scalar-Plain">with_items</span><span class="p-Indicator">:</span>
+</div><div class='line'>    <span class="p-Indicator">&ndash;</span> <span class="l-Scalar-Plain">libssl-dev</span>
+</div><div class='line'>    <span class="p-Indicator">&ndash;</span> <span class="l-Scalar-Plain">rsyslog-gnutls</span>
+</div><div class='line'> </div><div class='line'><span class="p-Indicator">&ndash;</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Copy rsyslog.conf</span>
+</div><div class='line'>  <span class="l-Scalar-Plain">copy</span><span class="p-Indicator">:</span> <span class="p-Indicator">&gt;</span>
+</div><div class='line'>    <span class="no">src=files/rsyslog.conf</span>
+</div><div class='line'>    <span class="no">dest=/etc/rsyslog.conf</span>
+</div><div class='line'>    <span class="no">owner=root group=root mode=0444</span>
+</div><div class='line'>  <span class="l-Scalar-Plain">notify</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">restart rsyslog</span>
+</div></pre></td></tr></table></div></figure></p>
+
+<p>And here&rsquo;s the content of rsyslog.conf:</p>
+
+<script
+  src="https://gist.github.com/raravena80/7221713.js?file=rsyslog.conf">
+</script>
+
+
+<p>Next you need to include the papertrail cerfiticate file if you want
+to encrypt your connection from rsyslog to PaperTrail.
+The link to the certificate file is
+<a href="https://papertrailapp.com/tools/syslog.papertrail.crt">here</a>.
+You also need to tell Ansible to restart rsyslog when it installs
+this file using the <code>notify</code> keyword.</p>
+
+<p><figure class='code'><figcaption>papertrail.yml</figcaption><div class='highlight'><table><tr><td class='line-numbers' aria-hidden='true'><pre><div data-line='1' class='line-number'></div><div data-line='2' class='line-number'></div><div data-line='3' class='line-number'></div><div data-line='4' class='line-number'></div><div data-line='5' class='line-number'></div><div data-line='6' class='line-number'></div></pre></td><td class='main  yaml'><pre><div class='line'><span class="p-Indicator">&ndash;</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Papertrail certificate</span>
+</div><div class='line'>  <span class="l-Scalar-Plain">copy</span><span class="p-Indicator">:</span> <span class="p-Indicator">&gt;</span>
+</div><div class='line'>    <span class="no">src=files/syslog.papertrail.crt</span>
+</div><div class='line'>    <span class="no">dest=/etc/syslog.papertrail.crt</span>
+</div><div class='line'>    <span class="no">owner=root group=root mode=0444</span>
+</div><div class='line'>  <span class="l-Scalar-Plain">notify</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">restart rsyslog</span>
+</div></pre></td></tr></table></div></figure></p>
+
+<p>Here you include the specific papertrail configuration
+for rsyslog.
+<figure class='code'><figcaption>papertrail.yml</figcaption><div class='highlight'><table><tr><td class='line-numbers' aria-hidden='true'><pre><div data-line='1' class='line-number'></div><div data-line='2' class='line-number'></div><div data-line='3' class='line-number'></div><div data-line='4' class='line-number'></div><div data-line='5' class='line-number'></div><div data-line='6' class='line-number'></div></pre></td><td class='main  yaml'><pre><div class='line'><span class="p-Indicator">&ndash;</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Papertrail rsyslog config file</span>
+</div><div class='line'>  <span class="l-Scalar-Plain">copy</span><span class="p-Indicator">:</span> <span class="p-Indicator">&gt;</span>
+</div><div class='line'>    <span class="no">src=files/papertrail.conf</span>
+</div><div class='line'>    <span class="no">dest=/etc/rsyslog.d/70-papertrail.conf</span>
+</div><div class='line'>    <span class="no">owner=root group=root mode=0444</span>
+</div><div class='line'>  <span class="l-Scalar-Plain">notify</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">restart rsyslog</span>
+</div></pre></td></tr></table></div></figure></p>
+
+<p>The papertrail.conf file can be seen here:</p>
+
+<script
+  src="https://gist.github.com/raravena80/7221713.js?file=papertrail.conf">
+</script>
+
+
+<p>Optionally you can install the Ruby papertrail remote
+syslog in case you&rsquo;d like to send random logs from the machine
+to PaperTrail.</p>
+
+<p><figure class='code'><figcaption>papertrail.yml</figcaption><div class='highlight'><table><tr><td class='line-numbers' aria-hidden='true'><pre><div data-line='1' class='line-number'></div><div data-line='2' class='line-number'></div><div data-line='3' class='line-number'></div><div data-line='4' class='line-number'></div></pre></td><td class='main  yaml'><pre><div class='line'><span class="p-Indicator">&ndash;</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Install Papertrail remote file logger</span>
+</div><div class='line'>  <span class="l-Scalar-Plain">shell</span><span class="p-Indicator">:</span> <span class="p-Indicator">&gt;</span>
+</div><div class='line'>    <span class="no">executable=/bin/bash source /etc/profile.d/rvm.sh;</span>
+</div><div class='line'>    <span class="no">gem install remote_syslog &mdash;no-ri &mdash;no-rdoc</span>
+</div></pre></td></tr></table></div></figure></p>
+
+<p>Finally just run it: <code>ansible-playbook -T 120 -i inventory-file papertrail.yml</code></p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Simple Clouformation With Multiple AWS Accounts]]></title>
+    <link href="http://raravena80.github.io/blog/2013/10/24/simple-clouformation-with-multiple-aws-accounts/"/>
+    <updated>2013-10-24T14:03:00-07:00</updated>
+    <id>http://raravena80.github.io/blog/2013/10/24/simple-clouformation-with-multiple-aws-accounts</id>
+    <content type="html"><![CDATA[<p>In this post I&rsquo;ll describe how to create a simple AWS CloudFormation template
+so that we can deploy stack using multiple AWS accounts.  In other words a common
+JSON CloudFormation template that can be use to bring
+up a stack in multiple accounts. The way we are able to do this is by
+having exact copies of the <a href="http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ComponentsAMIs.html">EC2 AMIs</a>
+on all the accounts and regions where we are deploying our stack.</p>
+
+<p>With the new features from AWS including the ability to link multiple accounts,
+many customers are starting to use accounts say for different departments or
+for different purposes say, production, QA, development, sales.  So, the motivation
+behind this script is the need for single JSON format that works
+across all accounts.</p>
+
+<p>For more information on CloudFormation you can visit the <a href="http://aws.amazon.com/cloudformation/">AWS Cloudformation Page</a> as
+well as the <a href="http://aws.amazon.com/documentation/cloudformation/">AWS Cloudformation documentation</a> page.</p>
+
+<p>First we ask for <code>parameters</code> in the CloudFormation template:</p>
+
+<p><figure class='code'><figcaption>cf.json</figcaption><div class='highlight'><table><tr><td class='line-numbers' aria-hidden='true'><pre><div data-line='1' class='line-number'></div><div data-line='2' class='line-number'></div><div data-line='3' class='line-number'></div><div data-line='4' class='line-number'></div><div data-line='5' class='line-number'></div><div data-line='6' class='line-number'></div><div data-line='7' class='line-number'></div><div data-line='8' class='line-number'></div><div data-line='9' class='line-number'></div><div data-line='10' class='line-number'></div><div data-line='11' class='line-number'></div><div data-line='12' class='line-number'></div><div data-line='13' class='line-number'></div><div data-line='14' class='line-number'></div><div data-line='15' class='line-number'></div><div data-line='16' class='line-number'></div><div data-line='17' class='line-number'></div><div data-line='18' class='line-number'></div><div data-line='19' class='line-number'></div><div data-line='20' class='line-number'></div><div data-line='21' class='line-number'></div><div data-line='22' class='line-number'></div><div data-line='23' class='line-number'></div><div data-line='24' class='line-number'></div><div data-line='25' class='line-number'></div><div data-line='26' class='line-number'></div><div data-line='27' class='line-number'></div><div data-line='28' class='line-number'></div><div data-line='29' class='line-number'></div><div data-line='30' class='line-number'></div><div data-line='31' class='line-number'></div><div data-line='32' class='line-number'></div></pre></td><td class='main  json'><pre><div class='line'><span class="p">{</span>
+</div><div class='line'>  <span class="nt">&quot;AWSTemplateFormatVersion&quot;</span><span class="p">:</span><span class="s2">&quot;2010-09-09&quot;</span><span class="p">,</span>
+</div><div class='line'>  <span class="nt">&quot;Description&quot;</span><span class="p">:</span><span class="s2">&quot;My WebService&quot;</span><span class="p">,</span>
+</div><div class='line'>  <span class="nt">&quot;Parameters&quot;</span><span class="p">:{</span>
+</div><div class='line'>    <span class="nt">&quot;AwsAccount&quot;</span><span class="p">:{</span>
+</div><div class='line'>      <span class="nt">&quot;Description&quot;</span><span class="p">:</span><span class="s2">&quot;Account: Production, or Dev&quot;</span><span class="p">,</span>
+</div><div class='line'>      <span class="nt">&quot;Type&quot;</span><span class="p">:</span><span class="s2">&quot;String&quot;</span><span class="p">,</span>
+</div><div class='line'>      <span class="nt">&quot;Default&quot;</span><span class="p">:</span><span class="s2">&quot;Production&quot;</span><span class="p">,</span>
+</div><div class='line'>      <span class="nt">&quot;MinLength&quot;</span><span class="p">:</span><span class="s2">&quot;1&quot;</span><span class="p">,</span>
+</div><div class='line'>      <span class="nt">&quot;MaxLength&quot;</span><span class="p">:</span><span class="s2">&quot;1&quot;</span><span class="p">,</span>
+</div><div class='line'>      <span class="nt">&quot;AllowedValues&quot;</span><span class="p">:[</span>
+</div><div class='line'>        <span class="s2">&quot;Production&quot;</span><span class="p">,</span>
+</div><div class='line'>        <span class="s2">&quot;Dev&quot;</span>
+</div><div class='line'>      <span class="p">],</span>
+</div><div class='line'>      <span class="nt">&quot;ConstraintDescription&quot;</span><span class="p">:</span><span class="s2">&quot;Must be either &#39;Production&#39;, or &#39;Dev&#39;&quot;</span>
+</div><div class='line'>    <span class="p">},</span>
+</div><div class='line'>    <span class="nt">&quot;InstanceType&quot;</span><span class="p">:{</span>
+</div><div class='line'>      <span class="nt">&quot;Description&quot;</span><span class="p">:</span><span class="s2">&quot;EC2 instnce type to launch&quot;</span><span class="p">,</span>
+</div><div class='line'>      <span class="nt">&quot;Type&quot;</span><span class="p">:</span><span class="s2">&quot;String&quot;</span><span class="p">,</span>
+</div><div class='line'>      <span class="nt">&quot;Default&quot;</span><span class="p">:</span><span class="s2">&quot;m1.large&quot;</span>
+</div><div class='line'>    <span class="p">},</span>
+</div><div class='line'>    <span class="nt">&quot;MinGroupSize&quot;</span><span class="p">:{</span>
+</div><div class='line'>      <span class="nt">&quot;Description&quot;</span><span class="p">:</span><span class="s2">&quot;Minimum number of servers to launch &ndash; Must match a multiple of avzones available in region&quot;</span><span class="p">,</span>
+</div><div class='line'>      <span class="nt">&quot;Type&quot;</span><span class="p">:</span><span class="s2">&quot;Number&quot;</span><span class="p">,</span>
+</div><div class='line'>      <span class="nt">&quot;Default&quot;</span><span class="p">:</span><span class="s2">&quot;3&quot;</span>
+</div><div class='line'>    <span class="p">},</span>
+</div><div class='line'>    <span class="nt">&quot;MaxGroupSize&quot;</span><span class="p">:{</span>
+</div><div class='line'>      <span class="nt">&quot;Description&quot;</span><span class="p">:</span><span class="s2">&quot;Maximum number of servers to launch &ndash; Must match a multiple of avzones available in region&quot;</span><span class="p">,</span>
+</div><div class='line'>      <span class="nt">&quot;Type&quot;</span><span class="p">:</span><span class="s2">&quot;Number&quot;</span><span class="p">,</span>
+</div><div class='line'>      <span class="nt">&quot;Default&quot;</span><span class="p">:</span><span class="s2">&quot;30&quot;</span>
+</div><div class='line'>    <span class="p">}</span>
+</div><div class='line'>  <span class="p">},</span>
+</div></pre></td></tr></table></div></figure></p>
+
+<p>Next up is the mappings definition, we have to define specific parameters for each account.
+Note the accountID variable is a generic one. You have to subsitute with your specific accountIds</p>
+
+<p><figure class='code'><figcaption>cf.json</figcaption><div class='highlight'><table><tr><td class='line-numbers' aria-hidden='true'><pre><div data-line='33' class='line-number'></div><div data-line='34' class='line-number'></div><div data-line='35' class='line-number'></div><div data-line='36' class='line-number'></div><div data-line='37' class='line-number'></div><div data-line='38' class='line-number'></div><div data-line='39' class='line-number'></div><div data-line='40' class='line-number'></div><div data-line='41' class='line-number'></div><div data-line='42' class='line-number'></div><div data-line='43' class='line-number'></div><div data-line='44' class='line-number'></div><div data-line='45' class='line-number'></div><div data-line='46' class='line-number'></div><div data-line='47' class='line-number'></div><div data-line='48' class='line-number'></div><div data-line='49' class='line-number'></div><div data-line='50' class='line-number'></div><div data-line='51' class='line-number'></div><div data-line='52' class='line-number'></div><div data-line='53' class='line-number'></div><div data-line='54' class='line-number'></div><div data-line='55' class='line-number'></div><div data-line='56' class='line-number'></div><div data-line='57' class='line-number'></div><div data-line='58' class='line-number'></div><div data-line='59' class='line-number'></div><div data-line='60' class='line-number'></div><div data-line='61' class='line-number'></div><div data-line='62' class='line-number'></div><div data-line='63' class='line-number'></div><div data-line='64' class='line-number'></div><div data-line='65' class='line-number'></div><div data-line='66' class='line-number'></div><div data-line='67' class='line-number'></div><div data-line='68' class='line-number'></div><div data-line='69' class='line-number'></div><div data-line='70' class='line-number'></div><div data-line='71' class='line-number'></div><div data-line='72' class='line-number'></div></pre></td><td class='main  json'><pre><div class='line'>  <span class="s2">&quot;Mappings&quot;</span><span class="err">:</span><span class="p">{</span>
+</div><div class='line'>    <span class="nt">&quot;AWSAccountInfo&quot;</span><span class="p">:{</span>
+</div><div class='line'>      <span class="nt">&quot;Production&quot;</span><span class="p">:{</span>
+</div><div class='line'>        <span class="nt">&quot;accountId&quot;</span><span class="p">:</span> <span class="mi">123456789012</span><span class="p">,</span>
+</div><div class='line'>        <span class="nt">&quot;hostedZone&quot;</span><span class="p">:</span><span class="s2">&quot;production.mydomain.com.&quot;</span><span class="p">,</span>
+</div><div class='line'>        <span class="nt">&quot;keypair&quot;</span><span class="p">:</span><span class="s2">&quot;production&quot;</span><span class="p">,</span>
+</div><div class='line'>        <span class="nt">&quot;envName&quot;</span><span class="p">:</span><span class="s2">&quot;production&quot;</span><span class="p">,</span>
+</div><div class='line'>        <span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="s2">&quot;Production&quot;</span>
+</div><div class='line'>      <span class="p">},</span>
+</div><div class='line'>      <span class="nt">&quot;Dev&quot;</span><span class="p">:{</span>
+</div><div class='line'>        <span class="nt">&quot;accountId&quot;</span><span class="p">:</span> <span class="mi">123456789012</span><span class="p">,</span>
+</div><div class='line'>        <span class="nt">&quot;hostedZone&quot;</span><span class="p">:</span><span class="s2">&quot;dev.mydomain.com.&quot;</span><span class="p">,</span>
+</div><div class='line'>        <span class="nt">&quot;keypair&quot;</span><span class="p">:</span><span class="s2">&quot;dev&quot;</span><span class="p">,</span>
+</div><div class='line'>        <span class="nt">&quot;envName&quot;</span><span class="p">:</span><span class="s2">&quot;dev&quot;</span><span class="p">,</span>
+</div><div class='line'>        <span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="s2">&quot;Dev&quot;</span>
+</div><div class='line'>      <span class="p">}</span>
+</div><div class='line'>    <span class="p">},</span>
+</div><div class='line'>    <span class="nt">&quot;Production&quot;</span><span class="p">:{</span>
+</div><div class='line'>      <span class="nt">&quot;us-east-1&quot;</span><span class="p">:{</span>
+</div><div class='line'>        <span class="nt">&quot;ami&quot;</span><span class="p">:</span><span class="s2">&quot;ami-xxxxxxxx&quot;</span>
+</div><div class='line'>      <span class="p">},</span>
+</div><div class='line'>      <span class="nt">&quot;us-west-1&quot;</span><span class="p">:{</span>
+</div><div class='line'>        <span class="nt">&quot;ami&quot;</span><span class="p">:</span><span class="s2">&quot;ami-xxxxxxxx&quot;</span>
+</div><div class='line'>      <span class="p">},</span>
+</div><div class='line'>      <span class="nt">&quot;us-west-2&quot;</span><span class="p">:{</span>
+</div><div class='line'>        <span class="nt">&quot;ami&quot;</span><span class="p">:</span><span class="s2">&quot;ami-xxxxxxxx&quot;</span>
+</div><div class='line'>      <span class="p">}</span>
+</div><div class='line'>    <span class="p">},</span>
+</div><div class='line'>    <span class="nt">&quot;Dev&quot;</span><span class="p">:{</span>
+</div><div class='line'>      <span class="nt">&quot;us-east-1&quot;</span><span class="p">:{</span>
+</div><div class='line'>        <span class="nt">&quot;ami&quot;</span><span class="p">:</span><span class="s2">&quot;ami-xxxxxxxx&quot;</span>
+</div><div class='line'>      <span class="p">},</span>
+</div><div class='line'>      <span class="nt">&quot;us-west-1&quot;</span><span class="p">:{</span>
+</div><div class='line'>        <span class="nt">&quot;ami&quot;</span><span class="p">:</span><span class="s2">&quot;ami-xxxxxxxx&quot;</span>
+</div><div class='line'>      <span class="p">},</span>
+</div><div class='line'>      <span class="nt">&quot;us-west-2&quot;</span><span class="p">:{</span>
+</div><div class='line'>        <span class="nt">&quot;ami&quot;</span><span class="p">:</span><span class="s2">&quot;ami-xxxxxxxx&quot;</span>
+</div><div class='line'>      <span class="p">}</span>
+</div><div class='line'>    <span class="p">}</span>
+</div><div class='line'>  <span class="p">}</span><span class="err">,</span>
+</div></pre></td></tr></table></div></figure></p>
+
+<p>Now you want to setup your resources starting with the Autoscaling group.
+Notice how on the notification configuration we specify parameters
+that identify out account.</p>
+
+<p><figure class='code'><figcaption>cf.json</figcaption><div class='highlight'><table><tr><td class='line-numbers' aria-hidden='true'><pre><div data-line='73' class='line-number'></div><div data-line='74' class='line-number'></div><div data-line='75' class='line-number'></div><div data-line='76' class='line-number'></div><div data-line='77' class='line-number'></div><div data-line='78' class='line-number'></div><div data-line='79' class='line-number'></div><div data-line='80' class='line-number'></div><div data-line='81' class='line-number'></div><div data-line='82' class='line-number'></div><div data-line='83' class='line-number'></div><div data-line='84' class='line-number'></div><div data-line='85' class='line-number'></div><div data-line='86' class='line-number'></div><div data-line='87' class='line-number'></div><div data-line='88' class='line-number'></div><div data-line='89' class='line-number'></div><div data-line='90' class='line-number'></div><div data-line='91' class='line-number'></div><div data-line='92' class='line-number'></div><div data-line='93' class='line-number'></div><div data-line='94' class='line-number'></div><div data-line='95' class='line-number'></div><div data-line='96' class='line-number'></div><div data-line='97' class='line-number'></div><div data-line='98' class='line-number'></div><div data-line='99' class='line-number'></div><div data-line='100' class='line-number'></div><div data-line='101' class='line-number'></div><div data-line='102' class='line-number'></div><div data-line='103' class='line-number'></div><div data-line='104' class='line-number'></div><div data-line='105' class='line-number'></div><div data-line='106' class='line-number'></div><div data-line='107' class='line-number marked start'></div><div data-line='108' class='line-number marked'></div><div data-line='109' class='line-number marked'></div><div data-line='110' class='line-number marked'></div><div data-line='111' class='line-number marked'></div><div data-line='112' class='line-number marked'></div><div data-line='113' class='line-number marked'></div><div data-line='114' class='line-number marked'></div><div data-line='115' class='line-number marked'></div><div data-line='116' class='line-number marked'></div><div data-line='117' class='line-number marked'></div><div data-line='118' class='line-number marked'></div><div data-line='119' class='line-number marked'></div><div data-line='120' class='line-number marked'></div><div data-line='121' class='line-number marked'></div><div data-line='122' class='line-number marked'></div><div data-line='123' class='line-number marked'></div><div data-line='124' class='line-number marked'></div><div data-line='125' class='line-number marked'></div><div data-line='126' class='line-number marked'></div><div data-line='127' class='line-number marked'></div><div data-line='128' class='line-number marked end'></div><div data-line='129' class='line-number'></div><div data-line='130' class='line-number'></div><div data-line='131' class='line-number'></div><div data-line='132' class='line-number'></div><div data-line='133' class='line-number'></div><div data-line='134' class='line-number'></div><div data-line='135' class='line-number'></div><div data-line='136' class='line-number'></div><div data-line='137' class='line-number'></div></pre></td><td class='main  json'><pre><div class='line'>  <span class="s2">&quot;Resources&quot;</span><span class="err">:</span><span class="p">{</span>
+</div><div class='line'>    <span class="nt">&quot;ServerGroup&quot;</span><span class="p">:{</span>
+</div><div class='line'>      <span class="nt">&quot;Type&quot;</span><span class="p">:</span><span class="s2">&quot;AWS::AutoScaling::AutoScalingGroup&quot;</span><span class="p">,</span>
+</div><div class='line'>      <span class="nt">&quot;Properties&quot;</span><span class="p">:{</span>
+</div><div class='line'>        <span class="nt">&quot;AvailabilityZones&quot;</span><span class="p">:{</span>
+</div><div class='line'>          <span class="nt">&quot;Fn::GetAZs&quot;</span><span class="p">:</span><span class="s2">&quot;&quot;</span>
+</div><div class='line'>        <span class="p">},</span>
+</div><div class='line'>        <span class="nt">&quot;LaunchConfigurationName&quot;</span><span class="p">:{</span>
+</div><div class='line'>          <span class="nt">&quot;Ref&quot;</span><span class="p">:</span><span class="s2">&quot;LaunchConfig&quot;</span>
+</div><div class='line'>        <span class="p">},</span>
+</div><div class='line'>        <span class="nt">&quot;MinSize&quot;</span><span class="p">:{</span>
+</div><div class='line'>          <span class="nt">&quot;Ref&quot;</span><span class="p">:</span><span class="s2">&quot;MinGroupSize&quot;</span>
+</div><div class='line'>        <span class="p">},</span>
+</div><div class='line'>        <span class="nt">&quot;MaxSize&quot;</span><span class="p">:{</span>
+</div><div class='line'>          <span class="nt">&quot;Ref&quot;</span><span class="p">:</span><span class="s2">&quot;MaxGroupSize&quot;</span>
+</div><div class='line'>        <span class="p">},</span>
+</div><div class='line'>        <span class="nt">&quot;LoadBalancerNames&quot;</span><span class="p">:[</span>
+</div><div class='line'>          <span class="p">{</span>
+</div><div class='line'>            <span class="nt">&quot;Ref&quot;</span><span class="p">:</span><span class="s2">&quot;ElasticLoadBalancer&quot;</span>
+</div><div class='line'>          <span class="p">}</span>
+</div><div class='line'>        <span class="p">],</span>
+</div><div class='line'>        <span class="nt">&quot;Cooldown&quot;</span><span class="p">:</span><span class="s2">&quot;120&quot;</span><span class="p">,</span>
+</div><div class='line'>        <span class="nt">&quot;Tags&quot;</span><span class="p">:[</span>
+</div><div class='line'>          <span class="p">{</span>
+</div><div class='line'>            <span class="nt">&quot;Key&quot;</span><span class="p">:</span><span class="s2">&quot;Name&quot;</span><span class="p">,</span>
+</div><div class='line'>            <span class="nt">&quot;Value&quot;</span><span class="p">:</span><span class="s2">&quot;MyServerType&quot;</span><span class="p">,</span>
+</div><div class='line'>            <span class="nt">&quot;PropagateAtLaunch&quot;</span><span class="p">:</span><span class="s2">&quot;true&quot;</span>
+</div><div class='line'>          <span class="p">},</span>
+</div><div class='line'>          <span class="p">{</span>
+</div><div class='line'>            <span class="nt">&quot;Key&quot;</span><span class="p">:</span><span class="s2">&quot;User&quot;</span><span class="p">,</span>
+</div><div class='line'>            <span class="nt">&quot;Value&quot;</span><span class="p">:</span><span class="s2">&quot;Customers&quot;</span><span class="p">,</span>
+</div><div class='line'>            <span class="nt">&quot;PropagateAtLaunch&quot;</span><span class="p">:</span><span class="s2">&quot;true&quot;</span>
+</div><div class='line'>          <span class="p">}</span>
+</div><div class='line'>        <span class="p">],</span>
+</div><div class='line marked start'>        <span class="nt">&quot;NotificationConfiguration&quot;</span><span class="p">:{</span>
+</div><div class='line marked'>          <span class="nt">&quot;TopicARN&quot;</span><span class="p">:{</span>
+</div><div class='line marked'>            <span class="nt">&quot;Fn::Join&quot;</span><span class="p">:[</span>
+</div><div class='line marked'>              <span class="s2">&quot;:&quot;</span><span class="p">,</span>
+</div><div class='line marked'>              <span class="p">[</span>
+</div><div class='line marked'>                <span class="s2">&quot;arn:aws:sns&quot;</span><span class="p">,</span>
+</div><div class='line marked'>                <span class="p">{</span>
+</div><div class='line marked'>                  <span class="nt">&quot;Ref&quot;</span><span class="p">:</span><span class="s2">&quot;AWS::Region&quot;</span>
+</div><div class='line marked'>                <span class="p">},</span>
+</div><div class='line marked'>                <span class="p">{</span>
+</div><div class='line marked'>                  <span class="nt">&quot;Fn::FindInMap&quot;</span><span class="p">:[</span>
+</div><div class='line marked'>                    <span class="s2">&quot;AWSAccountInfo&quot;</span><span class="p">,</span>
+</div><div class='line marked'>                    <span class="p">{</span>
+</div><div class='line marked'>                      <span class="nt">&quot;Ref&quot;</span><span class="p">:</span><span class="s2">&quot;AwsAccount&quot;</span>
+</div><div class='line marked'>                    <span class="p">},</span>
+</div><div class='line marked'>                    <span class="s2">&quot;accountId&quot;</span>
+</div><div class='line marked'>                  <span class="p">]</span>
+</div><div class='line marked'>                <span class="p">},</span>
+</div><div class='line marked'>                <span class="s2">&quot;notification&quot;</span>
+</div><div class='line marked'>              <span class="p">]</span>
+</div><div class='line marked'>            <span class="p">]</span>
+</div><div class='line marked end'>          <span class="p">},</span>
+</div><div class='line'>          <span class="nt">&quot;NotificationTypes&quot;</span><span class="p">:[</span>
+</div><div class='line'>            <span class="s2">&quot;autoscaling:EC2_INSTANCE_LAUNCH&quot;</span><span class="p">,</span>
+</div><div class='line'>            <span class="s2">&quot;autoscaling:EC2_INSTANCE_LAUNCH_ERROR&quot;</span><span class="p">,</span>
+</div><div class='line'>            <span class="s2">&quot;autoscaling:EC2_INSTANCE_TERMINATE&quot;</span><span class="p">,</span>
+</div><div class='line'>            <span class="s2">&quot;autoscaling:EC2_INSTANCE_TERMINATE_ERROR&quot;</span>
+</div><div class='line'>          <span class="p">]</span>
+</div><div class='line'>        <span class="p">}</span>
+</div><div class='line'>      <span class="p">}</span>
+</div><div class='line'>    <span class="p">},</span>
+</div></pre></td></tr></table></div></figure></p>
+
+<p>Next we define our launch configuration for our instance in our autoscaling group.
+Notice how we setup the environment in &ldquo;UserData&rdquo; to the one corresponding to the AWS account
+we are using.
+<figure class='code'><figcaption>cf.json</figcaption><div class='highlight'><table><tr><td class='line-numbers' aria-hidden='true'><pre><div data-line='138' class='line-number'></div><div data-line='139' class='line-number'></div><div data-line='140' class='line-number'></div><div data-line='141' class='line-number'></div><div data-line='142' class='line-number'></div><div data-line='143' class='line-number'></div><div data-line='144' class='line-number'></div><div data-line='145' class='line-number'></div><div data-line='146' class='line-number'></div><div data-line='147' class='line-number'></div><div data-line='148' class='line-number'></div><div data-line='149' class='line-number'></div><div data-line='150' class='line-number'></div><div data-line='151' class='line-number'></div><div data-line='152' class='line-number'></div><div data-line='153' class='line-number'></div><div data-line='154' class='line-number'></div><div data-line='155' class='line-number'></div><div data-line='156' class='line-number'></div><div data-line='157' class='line-number'></div><div data-line='158' class='line-number'></div><div data-line='159' class='line-number'></div><div data-line='160' class='line-number'></div><div data-line='161' class='line-number'></div><div data-line='162' class='line-number'></div><div data-line='163' class='line-number'></div><div data-line='164' class='line-number'></div><div data-line='165' class='line-number'></div><div data-line='166' class='line-number'></div><div data-line='167' class='line-number'></div><div data-line='168' class='line-number'></div><div data-line='169' class='line-number'></div><div data-line='170' class='line-number'></div><div data-line='171' class='line-number'></div><div data-line='172' class='line-number'></div><div data-line='173' class='line-number'></div><div data-line='174' class='line-number'></div><div data-line='175' class='line-number'></div><div data-line='176' class='line-number'></div><div data-line='177' class='line-number'></div><div data-line='178' class='line-number'></div><div data-line='179' class='line-number'></div><div data-line='180' class='line-number'></div><div data-line='181' class='line-number'></div><div data-line='182' class='line-number'></div><div data-line='183' class='line-number'></div></pre></td><td class='main  json'><pre><div class='line'>    <span class="s2">&quot;LaunchConfig&quot;</span><span class="err">:</span> <span class="p">{</span>
+</div><div class='line'>      <span class="nt">&quot;Type&quot;</span><span class="p">:</span><span class="s2">&quot;AWS::AutoScaling::LaunchConfiguration&quot;</span><span class="p">,</span>
+</div><div class='line'>      <span class="nt">&quot;Properties&quot;</span><span class="p">:</span> <span class="p">{</span>
+</div><div class='line'>        <span class="nt">&quot;KeyName&quot;</span><span class="p">:</span> <span class="p">{</span>
+</div><div class='line'>          <span class="nt">&quot;Fn::FindInMap&quot;</span><span class="p">:</span> <span class="p">[</span>
+</div><div class='line'>            <span class="s2">&quot;AWSAccountInfo&quot;</span><span class="p">,</span>
+</div><div class='line'>            <span class="p">{</span>
+</div><div class='line'>              <span class="nt">&quot;Ref&quot;</span><span class="p">:</span><span class="s2">&quot;AwsAccount&quot;</span>
+</div><div class='line'>            <span class="p">},</span>
+</div><div class='line'>            <span class="s2">&quot;keypair&quot;</span>
+</div><div class='line'>          <span class="p">]</span>
+</div><div class='line'>        <span class="p">},</span>
+</div><div class='line'>        <span class="nt">&quot;ImageId&quot;</span><span class="p">:{</span>
+</div><div class='line'>          <span class="nt">&quot;Fn::FindInMap&quot;</span><span class="p">:[</span>
+</div><div class='line'>            <span class="p">{</span>
+</div><div class='line'>              <span class="nt">&quot;Ref&quot;</span><span class="p">:</span><span class="s2">&quot;AwsAccount&quot;</span>
+</div><div class='line'>            <span class="p">},</span>
+</div><div class='line'>            <span class="p">{</span>
+</div><div class='line'>              <span class="nt">&quot;Ref&quot;</span><span class="p">:</span><span class="s2">&quot;AWS::Region&quot;</span>
+</div><div class='line'>            <span class="p">},</span>
+</div><div class='line'>            <span class="s2">&quot;ami&quot;</span>
+</div><div class='line'>          <span class="p">]</span>
+</div><div class='line'>        <span class="p">},</span>
+</div><div class='line'>        <span class="nt">&quot;SecurityGroups&quot;</span><span class="p">:[</span>
+</div><div class='line'>          <span class="p">{</span>
+</div><div class='line'>            <span class="nt">&quot;Ref&quot;</span><span class="p">:</span><span class="s2">&quot;InstanceSecurityGroup&quot;</span>
+</div><div class='line'>          <span class="p">}</span>
+</div><div class='line'>        <span class="p">],</span>
+</div><div class='line'>        <span class="nt">&quot;InstanceType&quot;</span><span class="p">:{</span>
+</div><div class='line'>          <span class="nt">&quot;Ref&quot;</span><span class="p">:</span><span class="s2">&quot;InstanceType&quot;</span>
+</div><div class='line'>        <span class="p">},</span>
+</div><div class='line'>        <span class="nt">&quot;IamInstanceProfile&quot;</span><span class="p">:{</span>
+</div><div class='line'>          <span class="nt">&quot;Ref&quot;</span><span class="p">:</span><span class="s2">&quot;DmpInstanceProfile&quot;</span>
+</div><div class='line'>        <span class="p">},</span>
+</div><div class='line'>        <span class="nt">&quot;UserData&quot;</span><span class="p">:</span> <span class="p">{</span>
+</div><div class='line'>          <span class="nt">&quot;Fn::Base64&quot;</span><span class="p">:</span> <span class="p">{</span>
+</div><div class='line'>             <span class="nt">&quot;Fn::Join&quot;</span><span class="p">:</span> <span class="p">[</span>
+</div><div class='line'>                 <span class="s2">&quot;\n&quot;</span><span class="p">,</span>
+</div><div class='line'>                 <span class="p">[</span> <span class="s2">&quot;#!/bin/bash&quot;</span><span class="p">,</span>
+</div><div class='line'>                   <span class="p">{</span> <span class="nt">&quot;Fn::Join&quot;</span><span class="p">:</span> <span class="p">[</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="p">[</span> <span class="s2">&quot;ENV=&#39;&quot;</span><span class="p">,</span> <span class="p">{</span> <span class="nt">&quot;Fn::FindInMap&quot;</span><span class="p">:[</span> <span class="s2">&quot;AWSAccountInfo&quot;</span><span class="p">,</span> <span class="p">{</span> <span class="nt">&quot;Ref&quot;</span><span class="p">:</span><span class="s2">&quot;AwsAccount&quot;</span> <span class="p">},</span> <span class="s2">&quot;envName&quot;</span> <span class="p">]</span> <span class="p">},</span> <span class="s2">&quot;&#39;&quot;</span> <span class="p">]</span> <span class="p">]</span> <span class="p">}</span>
+</div><div class='line'>                 <span class="p">]</span>
+</div><div class='line'>             <span class="p">]</span>
+</div><div class='line'>          <span class="p">}</span>
+</div><div class='line'>        <span class="p">}</span>
+</div><div class='line'>      <span class="p">}</span>
+</div><div class='line'>    <span class="p">}</span><span class="err">,</span>
+</div></pre></td></tr></table></div></figure></p>
+
+<p>Next we define the server scale up and scale down policies for AWS Autoscale.</p>
+
+<p><figure class='code'><figcaption>cf.json</figcaption><div class='highlight'><table><tr><td class='line-numbers' aria-hidden='true'><pre><div data-line='184' class='line-number'></div><div data-line='185' class='line-number'></div><div data-line='186' class='line-number'></div><div data-line='187' class='line-number'></div><div data-line='188' class='line-number'></div><div data-line='189' class='line-number'></div><div data-line='190' class='line-number'></div><div data-line='191' class='line-number'></div><div data-line='192' class='line-number'></div><div data-line='193' class='line-number'></div><div data-line='194' class='line-number'></div><div data-line='195' class='line-number'></div><div data-line='196' class='line-number'></div><div data-line='197' class='line-number'></div><div data-line='198' class='line-number'></div><div data-line='199' class='line-number'></div><div data-line='200' class='line-number'></div><div data-line='201' class='line-number'></div><div data-line='202' class='line-number'></div><div data-line='203' class='line-number'></div><div data-line='204' class='line-number'></div><div data-line='205' class='line-number'></div><div data-line='206' class='line-number'></div><div data-line='207' class='line-number'></div><div data-line='208' class='line-number'></div><div data-line='209' class='line-number'></div><div data-line='210' class='line-number'></div><div data-line='211' class='line-number'></div><div data-line='212' class='line-number'></div><div data-line='213' class='line-number'></div><div data-line='214' class='line-number'></div><div data-line='215' class='line-number'></div><div data-line='216' class='line-number'></div><div data-line='217' class='line-number'></div><div data-line='218' class='line-number'></div><div data-line='219' class='line-number'></div><div data-line='220' class='line-number'></div><div data-line='221' class='line-number'></div><div data-line='222' class='line-number'></div></pre></td><td class='main  json'><pre><div class='line'>    <span class="s2">&quot;ServerScaleUpPolicy&quot;</span><span class="err">:</span><span class="p">{</span>
+</div><div class='line'>      <span class="nt">&quot;Type&quot;</span><span class="p">:</span><span class="s2">&quot;AWS::AutoScaling::ScalingPolicy&quot;</span><span class="p">,</span>
+</div><div class='line'>      <span class="nt">&quot;Properties&quot;</span><span class="p">:{</span>
+</div><div class='line'>        <span class="nt">&quot;AdjustmentType&quot;</span><span class="p">:</span><span class="s2">&quot;ChangeInCapacity&quot;</span><span class="p">,</span>
+</div><div class='line'>        <span class="nt">&quot;AutoScalingGroupName&quot;</span><span class="p">:{</span>
+</div><div class='line'>          <span class="nt">&quot;Ref&quot;</span><span class="p">:</span><span class="s2">&quot;ServerGroup&quot;</span>
+</div><div class='line'>        <span class="p">},</span>
+</div><div class='line'>        <span class="nt">&quot;Cooldown&quot;</span><span class="p">:</span><span class="s2">&quot;60&quot;</span><span class="p">,</span>
+</div><div class='line'>        <span class="nt">&quot;ScalingAdjustment&quot;</span><span class="p">:</span> <span class="p">{</span>
+</div><div class='line'>          <span class="nt">&quot;Fn::Join&quot;</span><span class="p">:[</span>
+</div><div class='line'>            <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="p">[</span>
+</div><div class='line'>              <span class="p">{</span>
+</div><div class='line'>                <span class="nt">&quot;Ref&quot;</span><span class="p">:</span><span class="s2">&quot;MinGroupSize&quot;</span>
+</div><div class='line'>              <span class="p">}</span>
+</div><div class='line'>            <span class="p">]</span>
+</div><div class='line'>          <span class="p">]</span>
+</div><div class='line'>        <span class="p">}</span>
+</div><div class='line'>      <span class="p">}</span>
+</div><div class='line'>    <span class="p">}</span><span class="err">,</span>
+</div><div class='line'>    <span class="s2">&quot;ServerScaleDownPolicy&quot;</span><span class="err">:</span><span class="p">{</span>
+</div><div class='line'>      <span class="nt">&quot;Type&quot;</span><span class="p">:</span><span class="s2">&quot;AWS::AutoScaling::ScalingPolicy&quot;</span><span class="p">,</span>
+</div><div class='line'>      <span class="nt">&quot;Properties&quot;</span><span class="p">:{</span>
+</div><div class='line'>        <span class="nt">&quot;AdjustmentType&quot;</span><span class="p">:</span><span class="s2">&quot;ChangeInCapacity&quot;</span><span class="p">,</span>
+</div><div class='line'>        <span class="nt">&quot;AutoScalingGroupName&quot;</span><span class="p">:{</span>
+</div><div class='line'>          <span class="nt">&quot;Ref&quot;</span><span class="p">:</span><span class="s2">&quot;ServerGroup&quot;</span>
+</div><div class='line'>        <span class="p">},</span>
+</div><div class='line'>        <span class="nt">&quot;Cooldown&quot;</span><span class="p">:</span><span class="s2">&quot;60&quot;</span><span class="p">,</span>
+</div><div class='line'>        <span class="nt">&quot;ScalingAdjustment&quot;</span><span class="p">:</span> <span class="p">{</span>
+</div><div class='line'>          <span class="nt">&quot;Fn::Join&quot;</span><span class="p">:[</span>
+</div><div class='line'>            <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="p">[</span>
+</div><div class='line'>              <span class="s2">&quot;&ndash;&quot;</span><span class="p">,</span>
+</div><div class='line'>              <span class="p">{</span>
+</div><div class='line'>                <span class="nt">&quot;Ref&quot;</span><span class="p">:</span><span class="s2">&quot;MinGroupSize&quot;</span>
+</div><div class='line'>              <span class="p">}</span>
+</div><div class='line'>            <span class="p">]</span>
+</div><div class='line'>          <span class="p">]</span>
+</div><div class='line'>        <span class="p">}</span>
+</div><div class='line'>      <span class="p">}</span>
+</div><div class='line'>    <span class="p">}</span><span class="err">,</span>
+</div></pre></td></tr></table></div></figure></p>
+
+<p>Then we define some alarms.</p>
+
+<p><figure class='code'><figcaption>cf.json</figcaption><div class='highlight'><table><tr><td class='line-numbers' aria-hidden='true'><pre><div data-line='223' class='line-number'></div><div data-line='224' class='line-number'></div><div data-line='225' class='line-number'></div><div data-line='226' class='line-number'></div><div data-line='227' class='line-number'></div><div data-line='228' class='line-number'></div><div data-line='229' class='line-number'></div><div data-line='230' class='line-number'></div><div data-line='231' class='line-number'></div><div data-line='232' class='line-number'></div><div data-line='233' class='line-number'></div><div data-line='234' class='line-number'></div><div data-line='235' class='line-number'></div><div data-line='236' class='line-number'></div><div data-line='237' class='line-number'></div><div data-line='238' class='line-number'></div><div data-line='239' class='line-number'></div><div data-line='240' class='line-number'></div><div data-line='241' class='line-number'></div><div data-line='242' class='line-number'></div><div data-line='243' class='line-number'></div><div data-line='244' class='line-number'></div><div data-line='245' class='line-number'></div><div data-line='246' class='line-number'></div><div data-line='247' class='line-number'></div><div data-line='248' class='line-number'></div><div data-line='249' class='line-number'></div><div data-line='250' class='line-number'></div><div data-line='251' class='line-number'></div><div data-line='252' class='line-number'></div><div data-line='253' class='line-number'></div><div data-line='254' class='line-number'></div><div data-line='255' class='line-number'></div><div data-line='256' class='line-number'></div><div data-line='257' class='line-number'></div><div data-line='258' class='line-number'></div><div data-line='259' class='line-number'></div><div data-line='260' class='line-number'></div><div data-line='261' class='line-number'></div><div data-line='262' class='line-number'></div><div data-line='263' class='line-number'></div><div data-line='264' class='line-number'></div><div data-line='265' class='line-number'></div><div data-line='266' class='line-number'></div><div data-line='267' class='line-number'></div><div data-line='268' class='line-number'></div><div data-line='269' class='line-number'></div><div data-line='270' class='line-number'></div><div data-line='271' class='line-number'></div><div data-line='272' class='line-number'></div><div data-line='273' class='line-number'></div><div data-line='274' class='line-number'></div></pre></td><td class='main  json'><pre><div class='line'>    <span class="s2">&quot;CPUAlarmHigh&quot;</span><span class="err">:</span><span class="p">{</span>
+</div><div class='line'>      <span class="nt">&quot;Type&quot;</span><span class="p">:</span><span class="s2">&quot;AWS::CloudWatch::Alarm&quot;</span><span class="p">,</span>
+</div><div class='line'>      <span class="nt">&quot;Properties&quot;</span><span class="p">:{</span>
+</div><div class='line'>        <span class="nt">&quot;AlarmDescription&quot;</span><span class="p">:</span><span class="s2">&quot;Scale-up if CPU &gt; 80% for 5 minutes&quot;</span><span class="p">,</span>
+</div><div class='line'>        <span class="nt">&quot;MetricName&quot;</span><span class="p">:</span><span class="s2">&quot;CPUUtilization&quot;</span><span class="p">,</span>
+</div><div class='line'>        <span class="nt">&quot;Namespace&quot;</span><span class="p">:</span><span class="s2">&quot;AWS/EC2&quot;</span><span class="p">,</span>
+</div><div class='line'>        <span class="nt">&quot;Statistic&quot;</span><span class="p">:</span><span class="s2">&quot;Average&quot;</span><span class="p">,</span>
+</div><div class='line'>        <span class="nt">&quot;Period&quot;</span><span class="p">:</span><span class="s2">&quot;300&quot;</span><span class="p">,</span>
+</div><div class='line'>        <span class="nt">&quot;EvaluationPeriods&quot;</span><span class="p">:</span><span class="s2">&quot;2&quot;</span><span class="p">,</span>
+</div><div class='line'>        <span class="nt">&quot;Threshold&quot;</span><span class="p">:</span><span class="s2">&quot;70&quot;</span><span class="p">,</span>
+</div><div class='line'>        <span class="nt">&quot;AlarmActions&quot;</span><span class="p">:[</span>
+</div><div class='line'>          <span class="p">{</span>
+</div><div class='line'>            <span class="nt">&quot;Ref&quot;</span><span class="p">:</span><span class="s2">&quot;ServerScaleUpPolicy&quot;</span>
+</div><div class='line'>          <span class="p">}</span>
+</div><div class='line'>        <span class="p">],</span>
+</div><div class='line'>        <span class="nt">&quot;Dimensions&quot;</span><span class="p">:[</span>
+</div><div class='line'>          <span class="p">{</span>
+</div><div class='line'>            <span class="nt">&quot;Name&quot;</span><span class="p">:</span><span class="s2">&quot;AutoScalingGroupName&quot;</span><span class="p">,</span>
+</div><div class='line'>            <span class="nt">&quot;Value&quot;</span><span class="p">:{</span>
+</div><div class='line'>              <span class="nt">&quot;Ref&quot;</span><span class="p">:</span><span class="s2">&quot;ServerGroup&quot;</span>
+</div><div class='line'>            <span class="p">}</span>
+</div><div class='line'>          <span class="p">}</span>
+</div><div class='line'>        <span class="p">],</span>
+</div><div class='line'>        <span class="nt">&quot;ComparisonOperator&quot;</span><span class="p">:</span><span class="s2">&quot;GreaterThanThreshold&quot;</span>
+</div><div class='line'>      <span class="p">}</span>
+</div><div class='line'>    <span class="p">}</span><span class="err">,</span>
+</div><div class='line'>    <span class="s2">&quot;CPUAlarmLow&quot;</span><span class="err">:</span><span class="p">{</span>
+</div><div class='line'>      <span class="nt">&quot;Type&quot;</span><span class="p">:</span><span class="s2">&quot;AWS::CloudWatch::Alarm&quot;</span><span class="p">,</span>
+</div><div class='line'>      <span class="nt">&quot;Properties&quot;</span><span class="p">:{</span>
+</div><div class='line'>        <span class="nt">&quot;AlarmDescription&quot;</span><span class="p">:</span><span class="s2">&quot;Scale-down if CPU &lt; 20% for 20 minutes&quot;</span><span class="p">,</span>
+</div><div class='line'>        <span class="nt">&quot;MetricName&quot;</span><span class="p">:</span><span class="s2">&quot;CPUUtilization&quot;</span><span class="p">,</span>
+</div><div class='line'>        <span class="nt">&quot;Namespace&quot;</span><span class="p">:</span><span class="s2">&quot;AWS/EC2&quot;</span><span class="p">,</span>
+</div><div class='line'>        <span class="nt">&quot;Statistic&quot;</span><span class="p">:</span><span class="s2">&quot;Average&quot;</span><span class="p">,</span>
+</div><div class='line'>        <span class="nt">&quot;Period&quot;</span><span class="p">:</span><span class="s2">&quot;300&quot;</span><span class="p">,</span>
+</div><div class='line'>        <span class="nt">&quot;EvaluationPeriods&quot;</span><span class="p">:</span><span class="s2">&quot;4&quot;</span><span class="p">,</span>
+</div><div class='line'>        <span class="nt">&quot;Threshold&quot;</span><span class="p">:</span><span class="s2">&quot;20&quot;</span><span class="p">,</span>
+</div><div class='line'>        <span class="nt">&quot;AlarmActions&quot;</span><span class="p">:[</span>
+</div><div class='line'>          <span class="p">{</span>
+</div><div class='line'>            <span class="nt">&quot;Ref&quot;</span><span class="p">:</span><span class="s2">&quot;ServerScaleDownPolicy&quot;</span>
+</div><div class='line'>          <span class="p">}</span>
+</div><div class='line'>        <span class="p">],</span>
+</div><div class='line'>        <span class="nt">&quot;Dimensions&quot;</span><span class="p">:[</span>
+</div><div class='line'>          <span class="p">{</span>
+</div><div class='line'>            <span class="nt">&quot;Name&quot;</span><span class="p">:</span><span class="s2">&quot;AutoScalingGroupName&quot;</span><span class="p">,</span>
+</div><div class='line'>            <span class="nt">&quot;Value&quot;</span><span class="p">:{</span>
+</div><div class='line'>              <span class="nt">&quot;Ref&quot;</span><span class="p">:</span><span class="s2">&quot;ServerGroup&quot;</span>
+</div><div class='line'>            <span class="p">}</span>
+</div><div class='line'>          <span class="p">}</span>
+</div><div class='line'>        <span class="p">],</span>
+</div><div class='line'>        <span class="nt">&quot;ComparisonOperator&quot;</span><span class="p">:</span><span class="s2">&quot;LessThanThreshold&quot;</span>
+</div><div class='line'>      <span class="p">}</span>
+</div><div class='line'>    <span class="p">}</span><span class="err">,</span>
+</div></pre></td></tr></table></div></figure></p>
+
+<p>Now we define a Load Balancer.
+<figure class='code'><figcaption>cf.json</figcaption><div class='highlight'><table><tr><td class='line-numbers' aria-hidden='true'><pre><div data-line='275' class='line-number'></div><div data-line='276' class='line-number'></div><div data-line='277' class='line-number'></div><div data-line='278' class='line-number'></div><div data-line='279' class='line-number'></div><div data-line='280' class='line-number'></div><div data-line='281' class='line-number'></div><div data-line='282' class='line-number'></div><div data-line='283' class='line-number'></div><div data-line='284' class='line-number'></div><div data-line='285' class='line-number'></div><div data-line='286' class='line-number'></div><div data-line='287' class='line-number'></div><div data-line='288' class='line-number'></div><div data-line='289' class='line-number'></div><div data-line='290' class='line-number'></div><div data-line='291' class='line-number'></div><div data-line='292' class='line-number'></div><div data-line='293' class='line-number'></div><div data-line='294' class='line-number'></div><div data-line='295' class='line-number'></div><div data-line='296' class='line-number'></div></pre></td><td class='main  json'><pre><div class='line'>    <span class="s2">&quot;ElasticLoadBalancer&quot;</span><span class="err">:</span><span class="p">{</span>
+</div><div class='line'>      <span class="nt">&quot;Type&quot;</span><span class="p">:</span><span class="s2">&quot;AWS::ElasticLoadBalancing::LoadBalancer&quot;</span><span class="p">,</span>
+</div><div class='line'>      <span class="nt">&quot;Properties&quot;</span><span class="p">:{</span>
+</div><div class='line'>        <span class="nt">&quot;AvailabilityZones&quot;</span><span class="p">:{</span>
+</div><div class='line'>          <span class="nt">&quot;Fn::GetAZs&quot;</span><span class="p">:</span><span class="s2">&quot;&quot;</span>
+</div><div class='line'>        <span class="p">},</span>
+</div><div class='line'>        <span class="nt">&quot;Listeners&quot;</span><span class="p">:[</span>
+</div><div class='line'>          <span class="p">{</span>
+</div><div class='line'>            <span class="nt">&quot;LoadBalancerPort&quot;</span><span class="p">:</span><span class="s2">&quot;80&quot;</span><span class="p">,</span>
+</div><div class='line'>            <span class="nt">&quot;InstancePort&quot;</span><span class="p">:</span><span class="s2">&quot;80&quot;</span><span class="p">,</span>
+</div><div class='line'>            <span class="nt">&quot;Protocol&quot;</span><span class="p">:</span><span class="s2">&quot;HTTP&quot;</span>
+</div><div class='line'>          <span class="p">}</span>
+</div><div class='line'>        <span class="p">],</span>
+</div><div class='line'>        <span class="nt">&quot;HealthCheck&quot;</span><span class="p">:{</span>
+</div><div class='line'>          <span class="nt">&quot;Target&quot;</span><span class="p">:</span><span class="s2">&quot;<a href="HTTP:80/status&amp;quot;">HTTP:80/status&amp;quot;</a></span><span class="p">,</span>
+</div><div class='line'>          <span class="nt">&quot;HealthyThreshold&quot;</span><span class="p">:</span><span class="s2">&quot;3&quot;</span><span class="p">,</span>
+</div><div class='line'>          <span class="nt">&quot;UnhealthyThreshold&quot;</span><span class="p">:</span><span class="s2">&quot;3&quot;</span><span class="p">,</span>
+</div><div class='line'>          <span class="nt">&quot;Interval&quot;</span><span class="p">:</span><span class="s2">&quot;30&quot;</span><span class="p">,</span>
+</div><div class='line'>          <span class="nt">&quot;Timeout&quot;</span><span class="p">:</span><span class="s2">&quot;5&quot;</span>
+</div><div class='line'>        <span class="p">}</span>
+</div><div class='line'>      <span class="p">}</span>
+</div><div class='line'>    <span class="p">}</span><span class="err">,</span>
+</div></pre></td></tr></table></div></figure></p>
+
+<p>Now Security Groups and Security Policies.
+Notice the security group policy for the the
+RDS backend DB.
+An RDS instance can also be added to this template.</p>
+
+<p><figure class='code'><figcaption>cf.json</figcaption><div class='highlight'><table><tr><td class='line-numbers' aria-hidden='true'><pre><div data-line='297' class='line-number'></div><div data-line='298' class='line-number'></div><div data-line='299' class='line-number'></div><div data-line='300' class='line-number'></div><div data-line='301' class='line-number'></div><div data-line='302' class='line-number'></div><div data-line='303' class='line-number'></div><div data-line='304' class='line-number'></div><div data-line='305' class='line-number'></div><div data-line='306' class='line-number'></div><div data-line='307' class='line-number'></div><div data-line='308' class='line-number'></div><div data-line='309' class='line-number'></div><div data-line='310' class='line-number'></div><div data-line='311' class='line-number'></div><div data-line='312' class='line-number'></div><div data-line='313' class='line-number'></div><div data-line='314' class='line-number'></div><div data-line='315' class='line-number'></div><div data-line='316' class='line-number'></div><div data-line='317' class='line-number'></div><div data-line='318' class='line-number'></div><div data-line='319' class='line-number'></div><div data-line='320' class='line-number'></div><div data-line='321' class='line-number'></div><div data-line='322' class='line-number'></div><div data-line='323' class='line-number'></div><div data-line='324' class='line-number'></div><div data-line='325' class='line-number'></div><div data-line='326' class='line-number'></div><div data-line='327' class='line-number'></div><div data-line='328' class='line-number'></div><div data-line='329' class='line-number'></div><div data-line='330' class='line-number'></div><div data-line='331' class='line-number'></div><div data-line='332' class='line-number'></div><div data-line='333' class='line-number'></div><div data-line='334' class='line-number'></div><div data-line='335' class='line-number'></div><div data-line='336' class='line-number'></div></pre></td><td class='main  json'><pre><div class='line'>    <span class="s2">&quot;InstanceSecurityGroup&quot;</span><span class="err">:</span><span class="p">{</span>
+</div><div class='line'>      <span class="nt">&quot;Type&quot;</span><span class="p">:</span><span class="s2">&quot;AWS::EC2::SecurityGroup&quot;</span><span class="p">,</span>
+</div><div class='line'>      <span class="nt">&quot;Properties&quot;</span><span class="p">:{</span>
+</div><div class='line'>        <span class="nt">&quot;GroupDescription&quot;</span><span class="p">:</span><span class="s2">&quot;Server access&quot;</span><span class="p">,</span>
+</div><div class='line'>        <span class="nt">&quot;SecurityGroupIngress&quot;</span><span class="p">:[</span>
+</div><div class='line'>          <span class="p">{</span>
+</div><div class='line'>            <span class="nt">&quot;IpProtocol&quot;</span><span class="p">:</span><span class="s2">&quot;tcp&quot;</span><span class="p">,</span>
+</div><div class='line'>            <span class="nt">&quot;FromPort&quot;</span><span class="p">:</span><span class="s2">&quot;22&quot;</span><span class="p">,</span>
+</div><div class='line'>            <span class="nt">&quot;ToPort&quot;</span><span class="p">:</span><span class="s2">&quot;22&quot;</span><span class="p">,</span>
+</div><div class='line'>            <span class="nt">&quot;CidrIp&quot;</span><span class="p">:</span><span class="s2">&quot;0.0.0.0/0&quot;</span>
+</div><div class='line'>          <span class="p">},</span>
+</div><div class='line'>          <span class="p">{</span>
+</div><div class='line'>            <span class="nt">&quot;IpProtocol&quot;</span><span class="p">:</span><span class="s2">&quot;tcp&quot;</span><span class="p">,</span>
+</div><div class='line'>            <span class="nt">&quot;FromPort&quot;</span><span class="p">:</span><span class="s2">&quot;80&quot;</span><span class="p">,</span>
+</div><div class='line'>            <span class="nt">&quot;ToPort&quot;</span><span class="p">:</span><span class="s2">&quot;80&quot;</span><span class="p">,</span>
+</div><div class='line'>            <span class="nt">&quot;SourceSecurityGroupOwnerId&quot;</span><span class="p">:{</span>
+</div><div class='line'>              <span class="nt">&quot;Fn::GetAtt&quot;</span><span class="p">:[</span>
+</div><div class='line'>                <span class="s2">&quot;ElasticLoadBalancer&quot;</span><span class="p">,</span>
+</div><div class='line'>                <span class="s2">&quot;SourceSecurityGroup.OwnerAlias&quot;</span>
+</div><div class='line'>              <span class="p">]</span>
+</div><div class='line'>            <span class="p">},</span>
+</div><div class='line'>            <span class="nt">&quot;SourceSecurityGroupName&quot;</span><span class="p">:{</span>
+</div><div class='line'>              <span class="nt">&quot;Fn::GetAtt&quot;</span><span class="p">:[</span>
+</div><div class='line'>                <span class="s2">&quot;ElasticLoadBalancer&quot;</span><span class="p">,</span>
+</div><div class='line'>                <span class="s2">&quot;SourceSecurityGroup.GroupName&quot;</span>
+</div><div class='line'>              <span class="p">]</span>
+</div><div class='line'>            <span class="p">}</span>
+</div><div class='line'>          <span class="p">}</span>
+</div><div class='line'>        <span class="p">]</span>
+</div><div class='line'>      <span class="p">}</span>
+</div><div class='line'>    <span class="p">}</span><span class="err">,</span>
+</div><div class='line'>    <span class="s2">&quot;RdsIngress&quot;</span><span class="err">:</span><span class="p">{</span>
+</div><div class='line'>      <span class="nt">&quot;Type&quot;</span><span class="p">:</span><span class="s2">&quot;AWS::RDS::DBSecurityGroupIngress&quot;</span><span class="p">,</span>
+</div><div class='line'>      <span class="nt">&quot;Properties&quot;</span><span class="p">:{</span>
+</div><div class='line'>        <span class="nt">&quot;DBSecurityGroupName&quot;</span><span class="p">:</span><span class="s2">&quot;web-dbbackend&quot;</span><span class="p">,</span>
+</div><div class='line'>        <span class="nt">&quot;EC2SecurityGroupName&quot;</span><span class="p">:{</span>
+</div><div class='line'>          <span class="nt">&quot;Ref&quot;</span><span class="p">:</span><span class="s2">&quot;InstanceSecurityGroup&quot;</span>
+</div><div class='line'>        <span class="p">}</span>
+</div><div class='line'>      <span class="p">}</span>
+</div><div class='line'>    <span class="p">}</span>
+</div></pre></td></tr></table></div></figure></p>
+
+<p>Finally some outputs.</p>
+
+<p><figure class='code'><figcaption>cf.json</figcaption><div class='highlight'><table><tr><td class='line-numbers' aria-hidden='true'><pre><div data-line='337' class='line-number'></div><div data-line='338' class='line-number'></div><div data-line='339' class='line-number'></div><div data-line='340' class='line-number'></div><div data-line='341' class='line-number'></div><div data-line='342' class='line-number'></div><div data-line='343' class='line-number'></div><div data-line='344' class='line-number'></div><div data-line='345' class='line-number'></div><div data-line='346' class='line-number'></div><div data-line='347' class='line-number'></div><div data-line='348' class='line-number'></div><div data-line='349' class='line-number'></div><div data-line='350' class='line-number'></div><div data-line='351' class='line-number'></div><div data-line='352' class='line-number'></div><div data-line='353' class='line-number'></div><div data-line='354' class='line-number'></div><div data-line='355' class='line-number'></div><div data-line='356' class='line-number'></div><div data-line='357' class='line-number'></div></pre></td><td class='main  json'><pre><div class='line'>  <span class="err">},</span>
+</div><div class='line'>  <span class="s2">&quot;Outputs&quot;</span><span class="err">:</span><span class="p">{</span>
+</div><div class='line'>    <span class="nt">&quot;URL&quot;</span><span class="p">:{</span>
+</div><div class='line'>      <span class="nt">&quot;Description&quot;</span><span class="p">:</span><span class="s2">&quot;The URL of the ELB&quot;</span><span class="p">,</span>
+</div><div class='line'>      <span class="nt">&quot;Value&quot;</span><span class="p">:{</span>
+</div><div class='line'>        <span class="nt">&quot;Fn::Join&quot;</span><span class="p">:[</span>
+</div><div class='line'>          <span class="s2">&quot;&quot;</span><span class="p">,</span>
+</div><div class='line'>          <span class="p">[</span>
+</div><div class='line'>            <span class="s2">&quot;<a href="http://&amp;quot;">http://&amp;quot;</a></span><span class="p">,</span>
+</div><div class='line'>            <span class="p">{</span>
+</div><div class='line'>              <span class="nt">&quot;Fn::GetAtt&quot;</span><span class="p">:[</span>
+</div><div class='line'>                <span class="s2">&quot;ElasticLoadBalancer&quot;</span><span class="p">,</span>
+</div><div class='line'>                <span class="s2">&quot;DNSName&quot;</span>
+</div><div class='line'>              <span class="p">]</span>
+</div><div class='line'>            <span class="p">}</span>
+</div><div class='line'>          <span class="p">]</span>
+</div><div class='line'>        <span class="p">]</span>
+</div><div class='line'>      <span class="p">}</span>
+</div><div class='line'>    <span class="p">}</span>
+</div><div class='line'>  <span class="p">}</span>
+</div><div class='line'><span class="err">}</span>
+</div></pre></td></tr></table></div></figure></p>
+
+<p>To verify that syntax of your JSON script, save the full file to something
+like <code>cf.json</code> and run: <code>cat cf.json | python -mjson.tool</code></p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Ansible Playbook for Scout on Ubuntu]]></title>
+    <link href="http://raravena80.github.io/blog/2013/10/22/ansible-playbook-for-scout-on-ubuntu/"/>
+    <updated>2013-10-22T00:00:00-07:00</updated>
+    <id>http://raravena80.github.io/blog/2013/10/22/ansible-playbook-for-scout-on-ubuntu</id>
+    <content type="html"><![CDATA[<p>This is a sample Ansible task (<a href="http://www.ansibleworks.com">http://www.ansibleworks.com</a>)
+on how to setup Scout (<a href="https://www.scoutapp.com">https://www.scoutapp.com</a>) on Ubuntu.
+It needs to be included in an ansible playbook.</p>
+
+<p>It&rsquo;s a follow up to a previous
+ <a href="http://raravena80.github.io/blog/2013/10/21/how-to-create-an-ansible-playbook-to-configure-haproxy/">blog</a>
+ describing an Ansible Playbook to setup an HAProxy system. This Ansible task can
+ be included in the HAProxy playbook as well as any other playbooks with something
+ like this:</p>
+
+<p><figure class='code'><figcaption>scout.yml</figcaption><div class='highlight'><table><tr><td class='line-numbers' aria-hidden='true'><pre><div data-line='1' class='line-number'></div><div data-line='2' class='line-number'></div><div data-line='3' class='line-number'></div><div data-line='4' class='line-number'></div><div data-line='5' class='line-number'></div><div data-line='6' class='line-number'></div><div data-line='7' class='line-number'></div><div data-line='8' class='line-number'></div><div data-line='9' class='line-number'></div><div data-line='10' class='line-number'></div><div data-line='11' class='line-number'></div><div data-line='12' class='line-number'></div><div data-line='13' class='line-number'></div></pre></td><td class='main  yaml'><pre><div class='line'><span class="nn">&mdash;&ndash;</span>
+</div><div class='line'><span class="l-Scalar-Plain">PLAYBOOK</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Install scout on Ubuntu</span>
+</div><div class='line'><span class="nn">&mdash;&ndash;</span>
+</div><div class='line'><span class="p-Indicator">&ndash;</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">scout</span>
+</div><div class='line'>  <span class="l-Scalar-Plain">hosts</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">all</span>
+</div><div class='line'>  <span class="l-Scalar-Plain">user</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">user-with-sudo</span>
+</div><div class='line'>  <span class="l-Scalar-Plain">sudo</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">True</span>
+</div><div class='line'> </div><div class='line'>  <span class="l-Scalar-Plain">vars</span><span class="p-Indicator">:</span>
+</div><div class='line'>    <span class="l-Scalar-Plain">scout_key</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">YourScoutAPIKeyFromTheirWebsite</span>
+</div><div class='line'> </div><div class='line'>  <span class="l-Scalar-Plain">tasks</span><span class="p-Indicator">:</span>
+</div><div class='line'>    <span class="p-Indicator">&ndash;</span> <span class="l-Scalar-Plain">include</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">tasks/scout.yml</span>
+</div></pre></td></tr></table></div></figure></p>
+
+<p>We start by defining a &ldquo;task&rdquo; file:</p>
+
+<p><figure class='code'><figcaption>tasks/scout.yml</figcaption><div class='highlight'><table><tr><td class='line-numbers' aria-hidden='true'><pre><div data-line='1' class='line-number'></div><div data-line='2' class='line-number'></div><div data-line='3' class='line-number'></div><div data-line='4' class='line-number'></div><div data-line='5' class='line-number'></div><div data-line='6' class='line-number'></div><div data-line='7' class='line-number'></div><div data-line='8' class='line-number'></div><div data-line='9' class='line-number'></div><div data-line='10' class='line-number'></div><div data-line='11' class='line-number'></div><div data-line='12' class='line-number'></div><div data-line='13' class='line-number'></div><div data-line='14' class='line-number'></div><div data-line='15' class='line-number'></div></pre></td><td class='main  yaml'><pre><div class='line'><span class="nn">&mdash;&ndash;</span>
+</div><div class='line'><span class="c1"># TASK: ScoutApp Monitoring (<a href="https://scoutapp.com">https://scoutapp.com</a>) </span>
+</div><div class='line'> </div><div class='line'><span class="c1"># Separate task to install Ruby</span>
+</div><div class='line'><span class="p-Indicator">&ndash;</span> <span class="l-Scalar-Plain">include</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">ruby.yml</span>
+</div><div class='line'> </div><div class='line'><span class="p-Indicator">&ndash;</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Install scout + dependencies</span>
+</div><div class='line'>  <span class="l-Scalar-Plain">shell</span><span class="p-Indicator">:</span> <span class="p-Indicator">&gt;</span>
+</div><div class='line'>    <span class="no">executable=/bin/bash source /etc/profile.d/rvm.sh;</span>
+</div><div class='line'>    <span class="no">gem install scout scout_api &mdash;no-rdoc &mdash;no-ri</span>
+</div><div class='line'> </div><div class='line'><span class="p-Indicator">&ndash;</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Create scout home directory</span>
+</div><div class='line'>  <span class="l-Scalar-Plain">file</span><span class="p-Indicator">:</span> <span class="p-Indicator">&gt;</span>
+</div><div class='line'>    <span class="no">dest=/root/.scout state=directory</span>
+</div><div class='line'>    <span class="no">owner=root group=root mode=0700</span>
+</div></pre></td></tr></table></div></figure></p>
+
+<p>In the same file add the crontab entry
+and logrotate entry for Scout.</p>
+
+<p><figure class='code'><figcaption>tasks/scout.yml</figcaption><div class='highlight'><table><tr><td class='line-numbers' aria-hidden='true'><pre><div data-line='17' class='line-number'></div><div data-line='18' class='line-number'></div><div data-line='19' class='line-number'></div><div data-line='20' class='line-number'></div><div data-line='21' class='line-number'></div><div data-line='22' class='line-number'></div><div data-line='23' class='line-number'></div><div data-line='24' class='line-number'></div><div data-line='25' class='line-number'></div><div data-line='26' class='line-number'></div><div data-line='27' class='line-number'></div></pre></td><td class='main  yaml'><pre><div class='line'><span class="p-Indicator">&ndash;</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Scout cron script crontab</span>
+</div><div class='line'>  <span class="l-Scalar-Plain">template</span><span class="p-Indicator">:</span> <span class="p-Indicator">&gt;</span>
+</div><div class='line'>    <span class="no">dest=/etc/cron.d/scout</span>
+</div><div class='line'>    <span class="no">src=../packages/templates/scout/scout-crontab.j2</span>
+</div><div class='line'>    <span class="no">owner=root group=root mode=0444</span>
+</div><div class='line'> </div><div class='line'><span class="p-Indicator">&ndash;</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Scout cron script logrotate</span>
+</div><div class='line'>  <span class="l-Scalar-Plain">copy</span><span class="p-Indicator">:</span> <span class="p-Indicator">&gt;</span>
+</div><div class='line'>    <span class="no">dest=/etc/logrotate.d/scout</span>
+</div><div class='line'>    <span class="no">src=../packages/files/scout/scout-logrotate</span>
+</div><div class='line'>    <span class="no">owner=root group=root mode=0444</span>
+</div></pre></td></tr></table></div></figure></p>
+
+<p>This is what scout-crontab.j2 looks like:</p>
+
+<p><figure class='code'><figcaption>templates/scout-crontab.j2</figcaption><div class='highlight'><table><tr><td class='line-numbers' aria-hidden='true'><pre><div data-line='1' class='line-number'></div><div data-line='2' class='line-number'></div></pre></td><td class='main  jinja'><pre><div class='line'><span class="x"># crontab for Scout monitoring run by root</span>
+</div><div class='line'><span class="x">* * * * * root /bin/bash -l -c &#39;scout -n &quot;</span><span class="cp">&#x7b;&#x7b;</span> <span class="nv">ansible_fqdn</span> <span class="cp">}}</span><span class="x">&quot; </span><span class="cp">&#x7b;&#x7b;</span> <span class="nv">scout_key</span> <span class="cp">}}</span><span class="x">&#39; &gt;&gt; /var/log/scout.log 2&gt;&amp;1</span>
+</div></pre></td></tr></table></div></figure></p>
+
+<p>And this is what scout-logrotate looks like:</p>
+
+<p><figure class='code'><figcaption>files/scout-logrotate</figcaption><div class='highlight'><table><tr><td class='line-numbers' aria-hidden='true'><pre><div data-line='1' class='line-number'></div><div data-line='2' class='line-number'></div><div data-line='3' class='line-number'></div><div data-line='4' class='line-number'></div><div data-line='5' class='line-number'></div><div data-line='6' class='line-number'></div><div data-line='7' class='line-number'></div><div data-line='8' class='line-number'></div><div data-line='9' class='line-number'></div></pre></td><td class='main  plain'><pre><div class='line'>/var/log/admobius/scout.log
+</div><div class='line'>{
+</div><div class='line'>      rotate 7
+</div><div class='line'>      daily
+</div><div class='line'>      compress
+</div><div class='line'>      delaycompress
+</div><div class='line'>      missingok
+</div><div class='line'>      notifempty
+</div><div class='line'>}</div></pre></td></tr></table></div></figure></p>
+
+<p>Now to install ruby using RVM, if you don&rsquo;t want to use
+the system ruby (most of the times you don&rsquo;t).</p>
+
+<p><figure class='code'><figcaption>tasks/ruby.yml</figcaption><div class='highlight'><table><tr><td class='line-numbers' aria-hidden='true'><pre><div data-line='1' class='line-number'></div><div data-line='2' class='line-number'></div><div data-line='3' class='line-number'></div><div data-line='4' class='line-number'></div><div data-line='5' class='line-number'></div><div data-line='6' class='line-number'></div><div data-line='7' class='line-number'></div><div data-line='8' class='line-number'></div><div data-line='9' class='line-number'></div><div data-line='10' class='line-number'></div><div data-line='11' class='line-number'></div><div data-line='12' class='line-number'></div><div data-line='13' class='line-number'></div><div data-line='14' class='line-number'></div><div data-line='15' class='line-number'></div><div data-line='16' class='line-number'></div><div data-line='17' class='line-number'></div><div data-line='18' class='line-number'></div><div data-line='19' class='line-number'></div><div data-line='20' class='line-number'></div><div data-line='21' class='line-number'></div><div data-line='22' class='line-number'></div><div data-line='23' class='line-number'></div><div data-line='24' class='line-number'></div><div data-line='25' class='line-number'></div><div data-line='26' class='line-number'></div><div data-line='27' class='line-number'></div><div data-line='28' class='line-number'></div><div data-line='29' class='line-number'></div><div data-line='30' class='line-number'></div><div data-line='31' class='line-number'></div><div data-line='32' class='line-number'></div><div data-line='33' class='line-number'></div><div data-line='34' class='line-number'></div><div data-line='35' class='line-number'></div><div data-line='36' class='line-number'></div><div data-line='37' class='line-number'></div><div data-line='38' class='line-number'></div><div data-line='39' class='line-number'></div><div data-line='40' class='line-number'></div><div data-line='41' class='line-number'></div><div data-line='42' class='line-number'></div></pre></td><td class='main  yaml'><pre><div class='line'><span class="nn">&mdash;&ndash;</span>
+</div><div class='line'><span class="c1"># TASK: Install Ruby on Ubuntu</span>
+</div><div class='line'> </div><div class='line'><span class="p-Indicator">&ndash;</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Install Ruby dependencies</span>
+</div><div class='line'>  <span class="l-Scalar-Plain">apt</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">pkg=$item state=latest install_recommends=no</span>
+</div><div class='line'>  <span class="l-Scalar-Plain">with_items</span><span class="p-Indicator">:</span>
+</div><div class='line'>    <span class="p-Indicator">&ndash;</span> <span class="l-Scalar-Plain">autoconf</span>
+</div><div class='line'>    <span class="p-Indicator">&ndash;</span> <span class="l-Scalar-Plain">automake</span>
+</div><div class='line'>    <span class="p-Indicator">&ndash;</span> <span class="l-Scalar-Plain">bison</span>
+</div><div class='line'>    <span class="p-Indicator">&ndash;</span> <span class="l-Scalar-Plain">build-essential</span>
+</div><div class='line'>    <span class="p-Indicator">&ndash;</span> <span class="l-Scalar-Plain">curl</span>
+</div><div class='line'>    <span class="p-Indicator">&ndash;</span> <span class="l-Scalar-Plain">libc6-dev</span>
+</div><div class='line'>    <span class="p-Indicator">&ndash;</span> <span class="l-Scalar-Plain">libgdbm-dev</span>
+</div><div class='line'>    <span class="p-Indicator">&ndash;</span> <span class="l-Scalar-Plain">libffi-dev</span>
+</div><div class='line'>    <span class="p-Indicator">&ndash;</span> <span class="l-Scalar-Plain">libncurses5-dev</span>
+</div><div class='line'>    <span class="p-Indicator">&ndash;</span> <span class="l-Scalar-Plain">libreadline6</span>
+</div><div class='line'>    <span class="p-Indicator">&ndash;</span> <span class="l-Scalar-Plain">libreadline6-dev</span>
+</div><div class='line'>    <span class="p-Indicator">&ndash;</span> <span class="l-Scalar-Plain">libsqlite3-dev</span>
+</div><div class='line'>    <span class="p-Indicator">&ndash;</span> <span class="l-Scalar-Plain">libssl-dev</span>
+</div><div class='line'>    <span class="p-Indicator">&ndash;</span> <span class="l-Scalar-Plain">libtool</span>
+</div><div class='line'>    <span class="p-Indicator">&ndash;</span> <span class="l-Scalar-Plain">libyaml-dev</span>
+</div><div class='line'>    <span class="p-Indicator">&ndash;</span> <span class="l-Scalar-Plain">libxml2-dev</span>
+</div><div class='line'>    <span class="p-Indicator">&ndash;</span> <span class="l-Scalar-Plain">libxslt1-dev</span>
+</div><div class='line'>    <span class="p-Indicator">&ndash;</span> <span class="l-Scalar-Plain">openssl</span>
+</div><div class='line'>    <span class="p-Indicator">&ndash;</span> <span class="l-Scalar-Plain">pkg-config</span>
+</div><div class='line'>    <span class="p-Indicator">&ndash;</span> <span class="l-Scalar-Plain">sqlite3</span>
+</div><div class='line'>    <span class="p-Indicator">&ndash;</span> <span class="l-Scalar-Plain">subversion</span>
+</div><div class='line'>    <span class="p-Indicator">&ndash;</span> <span class="l-Scalar-Plain">zlib1g</span>
+</div><div class='line'>    <span class="p-Indicator">&ndash;</span> <span class="l-Scalar-Plain">zlib1g-dev</span>
+</div><div class='line'> </div><div class='line'><span class="p-Indicator">&ndash;</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Install RVM</span>
+</div><div class='line'>  <span class="l-Scalar-Plain">shell</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">curl -L get.rvm.io | bash -s stable</span>
+</div><div class='line'> </div><div class='line'><span class="p-Indicator">&ndash;</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Install Ruby 2.0.0</span>
+</div><div class='line'>  <span class="l-Scalar-Plain">shell</span><span class="p-Indicator">:</span> <span class="p-Indicator">&gt;</span>
+</div><div class='line'>    <span class="no">executable=/bin/bash source /etc/profile.d/rvm.sh;</span>
+</div><div class='line'>    <span class="no">rvm install 2.0.0</span>
+</div><div class='line'> </div><div class='line'><span class="p-Indicator">&ndash;</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Set default ruby version</span>
+</div><div class='line'>  <span class="l-Scalar-Plain">shell</span><span class="p-Indicator">:</span> <span class="p-Indicator">&gt;</span>
+</div><div class='line'>    <span class="no">executable=/bin/bash source /etc/profile.d/rvm.sh;</span>
+</div><div class='line'>    <span class="no">rvm &mdash;default use 2.0.0</span>
+</div></pre></td></tr></table></div></figure></p>
+
+<p>and now run it.</p>
+
+<p><code>ansible-playbook -T 120 scout.yml</code></p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Upgrade Linux Kernel on Chromebook]]></title>
+    <link href="http://raravena80.github.io/blog/2013/10/21/upgrade-linux-kernel-on-chromebook/"/>
+    <updated>2013-10-21T22:15:00-07:00</updated>
+    <id>http://raravena80.github.io/blog/2013/10/21/upgrade-linux-kernel-on-chromebook</id>
+    <content type="html"><![CDATA[<p>So after installing ChrUbuntu on my Acer C7 Chromebook,
+I&rsquo;m very pleased that with the help of this
+ <a href="http://velvet-underscore.blogspot.com/2013/01/chrubuntu-virtualbox-with-kvm.html">blog</a>
+I was able to upgrade the Linux Kernel to 3.8.11</p>
+
+<p><figure class='code'><figcaption>uname -a</figcaption><div class='highlight'><table><tr><td class='line-numbers' aria-hidden='true'><pre><div data-line='1' class='line-number'></div><div data-line='2' class='line-number'></div></pre></td><td class='main  bash'><pre><div class='line'>raravena@chromebook:~/git/blog-src<span class="nv">$ </span>uname -a
+</div><div class='line'>Linux chromebook 3.8.11 <span class="c">#3 SMP Thu Oct 17 07:41:20 PDT 2013 x86_64 x86_64 x86_64 GNU/Linux</span>
+</div></pre></td></tr></table></div></figure></p>
+
+<p>These are the modified steps:</p>
+
+<p><figure class='code'><figcaption>kernel-upgrade</figcaption><div class='highlight'><table><tr><td class='line-numbers' aria-hidden='true'><pre><div data-line='1' class='line-number'></div><div data-line='2' class='line-number'></div><div data-line='3' class='line-number'></div><div data-line='4' class='line-number'></div><div data-line='5' class='line-number'></div><div data-line='6' class='line-number'></div><div data-line='7' class='line-number'></div><div data-line='8' class='line-number'></div><div data-line='9' class='line-number'></div><div data-line='10' class='line-number'></div><div data-line='11' class='line-number'></div><div data-line='12' class='line-number'></div><div data-line='13' class='line-number'></div><div data-line='14' class='line-number'></div><div data-line='15' class='line-number'></div><div data-line='16' class='line-number'></div><div data-line='17' class='line-number'></div><div data-line='18' class='line-number'></div><div data-line='19' class='line-number'></div><div data-line='20' class='line-number'></div><div data-line='21' class='line-number'></div><div data-line='22' class='line-number'></div><div data-line='23' class='line-number'></div><div data-line='24' class='line-number'></div><div data-line='25' class='line-number'></div><div data-line='26' class='line-number'></div><div data-line='27' class='line-number'></div><div data-line='28' class='line-number'></div><div data-line='29' class='line-number'></div><div data-line='30' class='line-number'></div><div data-line='31' class='line-number'></div><div data-line='32' class='line-number'></div><div data-line='33' class='line-number'></div><div data-line='34' class='line-number'></div><div data-line='35' class='line-number'></div><div data-line='36' class='line-number'></div><div data-line='37' class='line-number'></div><div data-line='38' class='line-number'></div><div data-line='39' class='line-number'></div><div data-line='40' class='line-number'></div><div data-line='41' class='line-number'></div><div data-line='42' class='line-number'></div><div data-line='43' class='line-number'></div><div data-line='44' class='line-number'></div><div data-line='45' class='line-number'></div><div data-line='46' class='line-number'></div><div data-line='47' class='line-number'></div><div data-line='48' class='line-number'></div><div data-line='49' class='line-number'></div><div data-line='50' class='line-number'></div><div data-line='51' class='line-number'></div><div data-line='52' class='line-number'></div><div data-line='53' class='line-number'></div><div data-line='54' class='line-number'></div><div data-line='55' class='line-number'></div><div data-line='56' class='line-number'></div><div data-line='57' class='line-number'></div><div data-line='58' class='line-number'></div><div data-line='59' class='line-number'></div><div data-line='60' class='line-number'></div><div data-line='61' class='line-number'></div><div data-line='62' class='line-number'></div><div data-line='63' class='line-number'></div><div data-line='64' class='line-number'></div><div data-line='65' class='line-number'></div><div data-line='66' class='line-number'></div><div data-line='67' class='line-number'></div><div data-line='68' class='line-number'></div><div data-line='69' class='line-number'></div><div data-line='70' class='line-number'></div><div data-line='71' class='line-number'></div><div data-line='72' class='line-number'></div><div data-line='73' class='line-number'></div><div data-line='74' class='line-number'></div><div data-line='75' class='line-number'></div><div data-line='76' class='line-number'></div><div data-line='77' class='line-number'></div><div data-line='78' class='line-number'></div><div data-line='79' class='line-number'></div><div data-line='80' class='line-number'></div><div data-line='81' class='line-number'></div><div data-line='82' class='line-number'></div><div data-line='83' class='line-number'></div><div data-line='84' class='line-number'></div><div data-line='85' class='line-number'></div><div data-line='86' class='line-number'></div><div data-line='87' class='line-number'></div><div data-line='88' class='line-number'></div><div data-line='89' class='line-number'></div><div data-line='90' class='line-number'></div><div data-line='91' class='line-number'></div><div data-line='92' class='line-number'></div><div data-line='93' class='line-number'></div><div data-line='94' class='line-number'></div><div data-line='95' class='line-number'></div></pre></td><td class='main  bash'><pre><div class='line'><span class="c">#!/bin/bash</span>
+</div><div class='line'> </div><div class='line'><span class="nb">set</span> -x
+</div><div class='line'> </div><div class='line'><span class="c">#</span>
+</div><div class='line'><span class="c"># Grab verified boot utilities from ChromeOS.</span>
+</div><div class='line'><span class="c">#</span>
+</div><div class='line'>mkdir -p /usr/share/vboot
+</div><div class='line'>mount -o ro /dev/sda3 /mnt
+</div><div class='line'>cp /mnt/usr/bin/vbutil<em>* /usr/bin
+</div><div class='line'>mkdir -p /usr/bin/old_bins
+</div><div class='line'>cp /mnt/usr/bin/old_bins/vbutil</em><em> /usr/bin/old_bins/.
+</div><div class='line'>cp /mnt/usr/bin/dump_kernel_config /usr/bin
+</div><div class='line'>rsync -avz /mnt/usr/share/vboot/ /usr/share/vboot/
+</div><div class='line'>umount /mnt
+</div><div class='line'> </div><div class='line'><span class="c">#</span>
+</div><div class='line'><span class="c"># On the Acer C7, ChromeOS is 32-bit, so the verified boot binaries need a</span>
+</div><div class='line'><span class="c"># few 32-bit shared libraries to run under ChrUbuntu, which is 64-bit.</span>
+</div><div class='line'><span class="c">#</span>
+</div><div class='line'>apt-get install libc6:i386 libssl1.0.0:i386
+</div><div class='line'> </div><div class='line'><span class="c">#</span>
+</div><div class='line'><span class="c"># Fetch ChromeOS kernel sources from the Git repo.</span>
+</div><div class='line'><span class="c">#</span>
+</div><div class='line'>apt-get install git-core
+</div><div class='line'><span class="nb">cd</span> /usr/src
+</div><div class='line'>git clone  <a href="https://git.chromium.org/git/chromiumos/third_party/kernel-next.git">https://git.chromium.org/git/chromiumos/third_party/kernel-next.git</a>
+</div><div class='line'><span class="nb">cd </span>kernel-next
+</div><div class='line'>git checkout origin/chromeos-3.8
+</div><div class='line'> </div><div class='line'><span class="c">#</span>
+</div><div class='line'><span class="c"># Configure the kernel</span>
+</div><div class='line'><span class="c">#</span>
+</div><div class='line'><span class="c"># First we patch <code>base.config</code> to set <code>CONFIG_SECURITY_CHROMIUMOS</code></span>
+</div><div class='line'><span class="c"># to <code>n</code> &hellip;</span>
+</div><div class='line'>cp ./chromeos/config/base.config ./chromeos/config/base.config.orig
+</div><div class='line'>sed -e <span class="se">&lt;/span>
+</div><div class='line'>  <span class="s1">&#39;s/CONFIG_SECURITY_CHROMIUMOS=y/CONFIG_SECURITY_CHROMIUMOS=n/&#39;</span> <span class="se">&lt;/span>
+</div><div class='line'>  ./chromeos/config/base.config.orig &gt; ./chromeos/config/base.config
+</div><div class='line'>./chromeos/scripts/prepareconfig chromeos-intel-pineview
+</div><div class='line'><span class="c">#</span>
+</div><div class='line'><span class="c"># &hellip; and then we proceed as per Olaf&#39;s instructions</span>
+</div><div class='line'><span class="c">#</span>
+</div><div class='line'>yes <span class="s2">&quot;&quot;</span> | make oldconfig
+</div><div class='line'> </div><div class='line'><span class="c">#</span>
+</div><div class='line'><span class="c"># Build the Ubuntu kernel packages</span>
+</div><div class='line'><span class="c">#</span>
+</div><div class='line'>apt-get install kernel-package
+</div><div class='line'>make-kpkg kernel_image kernel_headers
+</div><div class='line'> </div><div class='line'><span class="c">#</span>
+</div><div class='line'><span class="c"># Backup current kernel and kernel modules</span>
+</div><div class='line'><span class="c">#</span>
+</div><div class='line'><span class="nv">tstamp</span><span class="o">=</span><span class="k">$(</span>date +%Y-%m-%d-%H%M<span class="k">)</span>
+</div><div class='line'>dd <span class="k">if</span><span class="o">=</span>/dev/sda6 <span class="nv">of</span><span class="o">=</span>/kernel-backup-<span class="nv">$tstamp</span>
+</div><div class='line'>cp -Rp /lib/modules/3.4.0 /lib/modules/3.4.0-backup-<span class="nv">$tstamp</span>
+</div><div class='line'> </div><div class='line'><span class="c">#</span>
+</div><div class='line'><span class="c"># Install kernel image and modules from the Ubuntu kernel packages we</span>
+</div><div class='line'><span class="c"># just created.</span>
+</div><div class='line'><span class="c">#</span>
+</div><div class='line'>dpkg -i /usr/src/linux-</em>.deb
+</div><div class='line'> </div><div class='line'><span class="c">#</span>
+</div><div class='line'><span class="c"># Extract old kernel config</span>
+</div><div class='line'><span class="c">#</span>
+</div><div class='line'>vbutil_kernel &mdash;verify /dev/sda6 &mdash;verbose | tail -1 &gt; /config-<span class="nv">$tstamp</span>-orig.txt
+</div><div class='line'><span class="c">#</span>
+</div><div class='line'><span class="c"># Add <code>disablevmx=off</code> to the command line, so that VMX is enabled (for VirtualBox &amp; Co)</span>
+</div><div class='line'><span class="c">#</span>
+</div><div class='line'>sed -e <span class="s1">&#39;s/$/ disablevmx=off/&#39;</span> <span class="se">&lt;/span>
+</div><div class='line'>  /config-<span class="nv">$tstamp</span>-orig.txt &gt; /config-<span class="nv">$tstamp</span>.txt
+</div><div class='line'> </div><div class='line'><span class="c">#</span>
+</div><div class='line'><span class="c"># Wrap the new kernel with the verified block and with the new config.</span>
+</div><div class='line'><span class="c">#</span>
+</div><div class='line'>vbutil_kernel &mdash;pack /newkernel <span class="se">&lt;/span>
+</div><div class='line'>  &mdash;keyblock /usr/share/vboot/devkeys/kernel.keyblock <span class="se">&lt;/span>
+</div><div class='line'>  &mdash;version 1 <span class="se">&lt;/span>
+</div><div class='line'>  &mdash;signprivate /usr/share/vboot/devkeys/kernel_data_key.vbprivk <span class="se">&lt;/span>
+</div><div class='line'>  &mdash;config<span class="o">=</span>/config-<span class="nv">$tstamp</span>.txt <span class="se">&lt;/span>
+</div><div class='line'>  &mdash;vmlinuz /boot/vmlinuz-3.8.11 <span class="se">&lt;/span>
+</div><div class='line'>  &mdash;arch x86_64
+</div><div class='line'> </div><div class='line'><span class="c">#</span>
+</div><div class='line'><span class="c"># Make sure the new kernel verifies OK.</span>
+</div><div class='line'><span class="c">#</span>
+</div><div class='line'>vbutil_kernel &mdash;verify /newkernel
+</div><div class='line'> </div><div class='line'><span class="c">#</span>
+</div><div class='line'><span class="c"># Copy the new kernel to the KERN-C partition.</span>
+</div><div class='line'><span class="c">#</span>
+</div><div class='line'>dd <span class="k">if</span><span class="o">=</span>/newkernel <span class="nv">of</span><span class="o">=</span>/dev/sda6
+</div></pre></td></tr></table></div></figure></p>
+
+<p>I ran into an error while compiling the kernel, but gladly was able to fix it
+<figure class='code'><figcaption>diffs</figcaption><div class='highlight'><table><tr><td class='line-numbers' aria-hidden='true'><pre><div data-line='1' class='line-number'></div><div data-line='2' class='line-number'></div><div data-line='3' class='line-number'></div><div data-line='4' class='line-number'></div><div data-line='5' class='line-number'></div><div data-line='6' class='line-number'></div><div data-line='7' class='line-number'></div><div data-line='8' class='line-number'></div><div data-line='9' class='line-number'></div><div data-line='10' class='line-number'></div><div data-line='11' class='line-number'></div><div data-line='12' class='line-number'></div><div data-line='13' class='line-number'></div></pre></td><td class='main  diff'><pre><div class='line'><span class="gh">diff &mdash;git a/net/mac80211/tx.c b/net/mac80211/tx.c</span>
+</div><div class='line'><span class="gh">index 467c1d1..4ba651d 100644</span>
+</div><div class='line'><span class="gd">&mdash;&ndash; a/net/mac80211/tx.c</span>
+</div><div class='line'><span class="gi">+++ b/net/mac80211/tx.c</span>
+</div><div class='line'><span class="gu">@@ -1749,7 +1749,7 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff <em>skb,</span>
+</div><div class='line'>        bool multicast;
+</div><div class='line'>        u32 info_flags = 0;
+</div><div class='line'>        u16 info_id = 0;
+</div><div class='line'><span class="gd">&ndash;       struct ieee80211_chanctx_conf </em>chanctx_conf;</span>
+</div><div class='line'><span class="gi">+       struct ieee80211_chanctx_conf <em>chanctx_conf = NULL;</span>
+</div><div class='line'>        struct ieee80211_sub_if_data </em>ap_sdata;
+</div><div class='line'>        enum ieee80211_band band;
+</div><div class='line'> </div></pre></td></tr></table></div></figure></p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Setup a Simple HAProxy Config]]></title>
+    <link href="http://raravena80.github.io/blog/2013/10/21/setup-a-simple-haproxy-config/"/>
+    <updated>2013-10-21T00:00:00-07:00</updated>
+    <id>http://raravena80.github.io/blog/2013/10/21/setup-a-simple-haproxy-config</id>
+    <content type="html"><![CDATA[<p>Here&rsquo;s simple haproxy configuration to get you started,
+you probably want to stick this under /etc/haproxy/haproxy.cfg</p>
+
+<p><figure class='code'><figcaption>Simple HAProxy Config</figcaption><div class='highlight'><table><tr><td class='line-numbers' aria-hidden='true'><pre><div data-line='1' class='line-number'></div><div data-line='2' class='line-number'></div><div data-line='3' class='line-number'></div><div data-line='4' class='line-number'></div><div data-line='5' class='line-number'></div><div data-line='6' class='line-number'></div><div data-line='7' class='line-number'></div><div data-line='8' class='line-number'></div><div data-line='9' class='line-number'></div><div data-line='10' class='line-number'></div><div data-line='11' class='line-number'></div><div data-line='12' class='line-number'></div><div data-line='13' class='line-number'></div><div data-line='14' class='line-number'></div><div data-line='15' class='line-number'></div><div data-line='16' class='line-number'></div><div data-line='17' class='line-number'></div><div data-line='18' class='line-number'></div><div data-line='19' class='line-number'></div><div data-line='20' class='line-number'></div><div data-line='21' class='line-number'></div><div data-line='22' class='line-number'></div><div data-line='23' class='line-number'></div><div data-line='24' class='line-number'></div><div data-line='25' class='line-number'></div><div data-line='26' class='line-number'></div><div data-line='27' class='line-number'></div><div data-line='28' class='line-number'></div><div data-line='29' class='line-number'></div><div data-line='30' class='line-number'></div><div data-line='31' class='line-number'></div><div data-line='32' class='line-number'></div><div data-line='33' class='line-number'></div><div data-line='34' class='line-number'></div><div data-line='35' class='line-number'></div><div data-line='36' class='line-number'></div><div data-line='37' class='line-number'></div><div data-line='38' class='line-number'></div><div data-line='39' class='line-number'></div><div data-line='40' class='line-number'></div><div data-line='41' class='line-number'></div><div data-line='42' class='line-number'></div><div data-line='43' class='line-number'></div><div data-line='44' class='line-number'></div><div data-line='45' class='line-number'></div><div data-line='46' class='line-number'></div></pre></td><td class='main  plain'><pre><div class='line'>global
+</div><div class='line'>    log 127.0.0.1   local0
+</div><div class='line'>    log 127.0.0.1   local1 notice
+</div><div class='line'>    maxconn 4096
+</div><div class='line'>    user haproxy
+</div><div class='line'>    group haproxy
+</div><div class='line'>    daemon
+</div><div class='line'> </div><div class='line'>defaults
+</div><div class='line'>    log global
+</div><div class='line'>    mode    http
+</div><div class='line'>    option  httplog
+</div><div class='line'>    option  dontlognull
+</div><div class='line'>    retries 3
+</div><div class='line'>    option redispatch
+</div><div class='line'>    maxconn 4096
+</div><div class='line'>    contimeout  5000
+</div><div class='line'>    clitimeout  50000
+</div><div class='line'>    srvtimeout  50000
+</div><div class='line'> </div><div class='line'>   stats enable
+</div><div class='line'>    stats auth      admin:password
+</div><div class='line'>    stats uri       /monitor
+</div><div class='line'>    stats refresh   5s
+</div><div class='line'>    option httpchk  GET /status
+</div><div class='line'>    retries     5
+</div><div class='line'>    option redispatch
+</div><div class='line'>    errorfile   503 /etc/haproxy/errors/503.http
+</div><div class='line'>    errorfile   400 /etc/haproxy/errors/400.http
+</div><div class='line'>    errorfile   403 /etc/haproxy/errors/403.http
+</div><div class='line'>    errorfile   408 /etc/haproxy/errors/408.http
+</div><div class='line'>    errorfile   500 /etc/haproxy/errors/500.http
+</div><div class='line'>    errorfile   502 /etc/haproxy/errors/502.http
+</div><div class='line'>    errorfile   503 /etc/haproxy/errors/503.http
+</div><div class='line'>    errorfile   504 /etc/haproxy/errors/504.http
+</div><div class='line'>    balance roundrobin  # each server is used in turns, according to assigned weight
+</div><div class='line'> </div><div class='line'>listen http-in
+</div><div class='line'>    bind :80
+</div><div class='line'>    monitor-uri   /haproxy  # end point to monitor HAProxy status (returns 200)
+</div><div class='line'> </div><div class='line'>    # option httpclose
+</div><div class='line'>    server server1 server1.mydomain.com:8080 weight 1 maxconn 2000 check inter 4000
+</div><div class='line'>    server server2 server2.mydomain.com:8080 weight 1 maxconn 2000 check inter 4000
+</div><div class='line'>    server server3 server3.mydomain.com:8080 weight 1 maxconn 2000 check inter 4000
+</div><div class='line'>    rspidel ^Set-cookie:\ IP=   # do not let this cookie tell our internal IP address
+</div></pre></td></tr></table></div></figure></p>
+
+<p>You also want to setup logging using rsyslog,
+you can syslog-ng or other loggers too as well,
+but the configuration is different.
+<figure class='code'><figcaption>Rsyslog HAproxy config</figcaption><div class='highlight'><table><tr><td class='line-numbers' aria-hidden='true'><pre><div data-line='1' class='line-number'></div><div data-line='2' class='line-number'></div><div data-line='3' class='line-number'></div><div data-line='4' class='line-number'></div></pre></td><td class='main  plain'><pre><div class='line'># put this in /etc/rsyslog.d/49-haproxy.conf:
+</div><div class='line'>local0.<em> &ndash;/var/log/haproxy/haproxy_0.log
+</div><div class='line'>local1.</em> &ndash;/var/log/haproxy/haproxy_1.log
+</div><div class='line'>&amp; ~</div></pre></td></tr></table></div></figure></p>
+
+<p>Now, setup logrotate (usually under /etc/logrotate.d/haproxy:
+<figure class='code'><figcaption>HAProxy logrotate config</figcaption><div class='highlight'><table><tr><td class='line-numbers' aria-hidden='true'><pre><div data-line='1' class='line-number'></div><div data-line='2' class='line-number'></div><div data-line='3' class='line-number'></div><div data-line='4' class='line-number'></div><div data-line='5' class='line-number'></div><div data-line='6' class='line-number'></div><div data-line='7' class='line-number'></div><div data-line='8' class='line-number'></div><div data-line='9' class='line-number'></div><div data-line='10' class='line-number'></div><div data-line='11' class='line-number'></div><div data-line='12' class='line-number'></div><div data-line='13' class='line-number'></div></pre></td><td class='main  plain'><pre><div class='line'>/var/log/haproxy/haproxy*.log
+</div><div class='line'>{
+</div><div class='line'>    rotate 7
+</div><div class='line'>    weekly
+</div><div class='line'>    missingok
+</div><div class='line'>    notifempty
+</div><div class='line'>    compress
+</div><div class='line'>    delaycompress
+</div><div class='line'>    sharedscripts
+</div><div class='line'>    postrotate
+</div><div class='line'>        reload rsyslog >/dev/null 2>&amp;1 || true
+</div><div class='line'>    endscript
+</div><div class='line'>}</div></pre></td></tr></table></div></figure></p>
+
+<p>You can also use your favorite configuration management tool,
+such as Puppet, Chef or Ansible, to parameterize and template
+the configurations. I use Ansible (I&rsquo;ll explain in a different
+blog)</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[How To Create an Ansible Playbook to Configure HAProxy]]></title>
+    <link href="http://raravena80.github.io/blog/2013/10/21/how-to-create-an-ansible-playbook-to-configure-haproxy/"/>
+    <updated>2013-10-21T00:00:00-07:00</updated>
+    <id>http://raravena80.github.io/blog/2013/10/21/how-to-create-an-ansible-playbook-to-configure-haproxy</id>
+    <content type="html"><![CDATA[<p>This is the continuation for
+<a href="http://raravena80.github.io/blog/2013/10/21/setup-a-simple-haproxy-config/">Setup a Simple HAProxy Config</a></p>
+
+<p>It explains how to create an Ansible playbook to automate the haproxy
+configuration.</p>
+
+<p>If you&rsquo;d like to find out more about Ansible you can read up on it on
+their website: <a href="http://www.ansibleworks.com">http://www.ansibleworks.com</a></p>
+
+<p><figure class='code'><figcaption>haproxy.yml</figcaption><div class='highlight'><table><tr><td class='line-numbers' aria-hidden='true'><pre><div data-line='1' class='line-number'></div><div data-line='2' class='line-number'></div><div data-line='3' class='line-number'></div><div data-line='4' class='line-number'></div><div data-line='5' class='line-number'></div><div data-line='6' class='line-number'></div><div data-line='7' class='line-number'></div><div data-line='8' class='line-number'></div><div data-line='9' class='line-number'></div><div data-line='10' class='line-number'></div><div data-line='11' class='line-number'></div><div data-line='12' class='line-number'></div><div data-line='13' class='line-number'></div><div data-line='14' class='line-number'></div><div data-line='15' class='line-number'></div><div data-line='16' class='line-number'></div><div data-line='17' class='line-number'></div><div data-line='18' class='line-number'></div><div data-line='19' class='line-number'></div><div data-line='20' class='line-number'></div><div data-line='21' class='line-number'></div><div data-line='22' class='line-number'></div><div data-line='23' class='line-number'></div><div data-line='24' class='line-number'></div><div data-line='25' class='line-number'></div><div data-line='26' class='line-number'></div><div data-line='27' class='line-number'></div><div data-line='28' class='line-number'></div><div data-line='29' class='line-number'></div><div data-line='30' class='line-number'></div><div data-line='31' class='line-number'></div><div data-line='32' class='line-number'></div><div data-line='33' class='line-number'></div><div data-line='34' class='line-number'></div><div data-line='35' class='line-number'></div><div data-line='36' class='line-number'></div><div data-line='37' class='line-number'></div><div data-line='38' class='line-number'></div><div data-line='39' class='line-number'></div><div data-line='40' class='line-number'></div><div data-line='41' class='line-number'></div></pre></td><td class='main  yaml'><pre><div class='line'><span class="nn">&mdash;&ndash;</span>
+</div><div class='line'><span class="c1"># Set up and configure an HaProxy server (Ubuntu flavor)</span>
+</div><div class='line'><span class="p-Indicator">&ndash;</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">haproxy</span>
+</div><div class='line'>  <span class="l-Scalar-Plain">hosts</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">all</span>
+</div><div class='line'>  <span class="l-Scalar-Plain">user</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">userwithsudoaccess</span>
+</div><div class='line'>  <span class="l-Scalar-Plain">sudo</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">True</span>
+</div><div class='line'>  <span class="l-Scalar-Plain">tags</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">haproxy</span>
+</div><div class='line'> </div><div class='line'>  <span class="l-Scalar-Plain">vars_files</span><span class="p-Indicator">:</span>
+</div><div class='line'>    <span class="p-Indicator">&ndash;</span> <span class="s">&quot;vars/main.yml&quot;</span>
+</div><div class='line'> </div><div class='line'>  <span class="l-Scalar-Plain">tasks</span><span class="p-Indicator">:</span>
+</div><div class='line'> </div><div class='line'>    <span class="c1"># haproxy package for Ubuntu</span>
+</div><div class='line'>    <span class="p-Indicator">&ndash;</span> <span class="l-Scalar-Plain">include</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">tasks/haproxy-apt.yml</span>
+</div><div class='line'> </div><div class='line'>    <span class="c1"># Specific haproxy tasks follow here</span>
+</div><div class='line'>    <span class="p-Indicator">&ndash;</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Copy haproxy logrotate file</span>
+</div><div class='line'>      <span class="l-Scalar-Plain">action</span><span class="p-Indicator">:</span> <span class="p-Indicator">&gt;</span>
+</div><div class='line'>        <span class="no">copy src=files/haproxy.logrotate dest=/etc/logrotate.d/haproxy</span>
+</div><div class='line'>        <span class="no">mode=0644 owner=root group=root</span>
+</div><div class='line'> </div><div class='line'>    <span class="p-Indicator">&ndash;</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Create haproxy rsyslog configuration</span>
+</div><div class='line'>      <span class="l-Scalar-Plain">action</span><span class="p-Indicator">:</span> <span class="p-Indicator">&gt;</span>
+</div><div class='line'>        <span class="no">copy src=files/haproxy-rsyslog.conf</span>
+</div><div class='line'>        <span class="no">dest=/etc/rsyslog.d/49-haproxy.conf</span>
+</div><div class='line'>        <span class="no">mode=0644 owner=root group=root</span>
+</div><div class='line'>      <span class="l-Scalar-Plain">notify</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">restart rsyslog</span>
+</div><div class='line'> </div><div class='line'>    <span class="p-Indicator">&ndash;</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Configure system rsyslog</span>
+</div><div class='line'>      <span class="l-Scalar-Plain">action</span><span class="p-Indicator">:</span> <span class="p-Indicator">&gt;</span>
+</div><div class='line'>        <span class="no">copy src=files/rsyslog.conf</span>
+</div><div class='line'>        <span class="no">dest=/etc/rsyslog.conf</span>
+</div><div class='line'>        <span class="no">mode=0644 owner=root group=root</span>
+</div><div class='line'>      <span class="l-Scalar-Plain">notify</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">restart rsyslog</span>
+</div><div class='line'> </div><div class='line'>    <span class="p-Indicator">&ndash;</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Create haproxy configuration file</span>
+</div><div class='line'>      <span class="l-Scalar-Plain">action</span><span class="p-Indicator">:</span> <span class="p-Indicator">&gt;</span>
+</div><div class='line'>        <span class="no">template src=templates/haproxy.cfg.j2 dest=/etc/haproxy/haproxy.cfg</span>
+</div><div class='line'>        <span class="no">mode=0644 owner=root group=root</span>
+</div><div class='line'>      <span class="l-Scalar-Plain">notify</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">restart haproxy</span>
+</div></pre></td></tr></table></div></figure></p>
+
+<p>The following file that contains the variables needed for the haproxy playbook
+it should located under vars (vars/main.yml)</p>
+
+<p><figure class='code'><figcaption>vars/main.yml</figcaption><div class='highlight'><table><tr><td class='line-numbers' aria-hidden='true'><pre><div data-line='1' class='line-number'></div><div data-line='2' class='line-number'></div><div data-line='3' class='line-number'></div><div data-line='4' class='line-number'></div><div data-line='5' class='line-number'></div><div data-line='6' class='line-number'></div></pre></td><td class='main  yaml'><pre><div class='line'><span class="nn">&mdash;&ndash;</span>
+</div><div class='line'><span class="l-Scalar-Plain">haproxy_port</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">8080</span>
+</div><div class='line'><span class="l-Scalar-Plain">haproxy_servers</span><span class="p-Indicator">:</span>
+</div><div class='line'>  <span class="p-Indicator">&ndash;</span> <span class="l-Scalar-Plain">server1.mydomain.com</span>
+</div><div class='line'>  <span class="p-Indicator">&ndash;</span> <span class="l-Scalar-Plain">server2.mydomain.com</span>
+</div><div class='line'>  <span class="p-Indicator">&ndash;</span> <span class="l-Scalar-Plain">server3.mydomain.com</span>
+</div></pre></td></tr></table></div></figure></p>
+
+<p>The following is the task/haproxy-apt.yml file that is used to
+install haproxy on Ubuntu. If you are using CentOS or RedHat
+you can use &lsquo;yum&rsquo; instead of &lsquo;apt&rsquo;</p>
+
+<p><figure class='code'><figcaption>tasks/haproxy-apt.yml</figcaption><div class='highlight'><table><tr><td class='line-numbers' aria-hidden='true'><pre><div data-line='1' class='line-number'></div><div data-line='2' class='line-number'></div><div data-line='3' class='line-number'></div><div data-line='4' class='line-number'></div><div data-line='5' class='line-number'></div><div data-line='6' class='line-number'></div><div data-line='7' class='line-number'></div><div data-line='8' class='line-number'></div><div data-line='9' class='line-number'></div><div data-line='10' class='line-number'></div><div data-line='11' class='line-number'></div><div data-line='12' class='line-number'></div><div data-line='13' class='line-number'></div><div data-line='14' class='line-number'></div><div data-line='15' class='line-number'></div><div data-line='16' class='line-number'></div><div data-line='17' class='line-number'></div><div data-line='18' class='line-number'></div><div data-line='19' class='line-number'></div><div data-line='20' class='line-number'></div></pre></td><td class='main  yaml'><pre><div class='line'><span class="nn">&mdash;&ndash;</span>
+</div><div class='line'><span class="c1"># TASK: Install and configure HAProxy &ndash; Ubuntu style</span>
+</div><div class='line'><span class="c1">#</span>
+</div><div class='line'> </div><div class='line'><span class="p-Indicator">&ndash;</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Install HAProxy</span>
+</div><div class='line'>  <span class="l-Scalar-Plain">action</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">apt pkg=$item state=latest</span>
+</div><div class='line'>  <span class="l-Scalar-Plain">with_items</span><span class="p-Indicator">:</span>
+</div><div class='line'>    <span class="p-Indicator">&ndash;</span> <span class="l-Scalar-Plain">haproxy</span>
+</div><div class='line'> </div><div class='line'><span class="p-Indicator">&ndash;</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Enable HAProxy service</span>
+</div><div class='line'>  <span class="l-Scalar-Plain">action</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">service name=haproxy enabled=yes</span>
+</div><div class='line'> </div><div class='line'><span class="p-Indicator">&ndash;</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Copy Ubuntu default file</span>
+</div><div class='line'>  <span class="l-Scalar-Plain">action</span><span class="p-Indicator">:</span> <span class="p-Indicator">&gt;</span>
+</div><div class='line'>    <span class="no">copy dest=/etc/default/haproxy</span>
+</div><div class='line'>    <span class="no">src=../packages/files/haproxy/default</span>
+</div><div class='line'>    <span class="no">owner=root group=root mode=0444</span>
+</div><div class='line'>  <span class="l-Scalar-Plain">notify</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">restart haproxy</span>
+</div><div class='line'>  <span class="c1"># Note the notify clause is handled by a</span>
+</div><div class='line'>  <span class="c1"># Ansible handler (explained below)</span>
+</div></pre></td></tr></table></div></figure></p>
+
+<p>The content for rsyslog.conf, haproxy.logrotate and 49-haproxy.conf can
+be found in the previous
+<a href="http://raravena80.github.io/blog/2013/10/21/setup-a-simple-haproxy-config/">blog</a></p>
+
+<p>However, this time we are templating haproxy.cfg with jinja2 and the content is:</p>
+
+<p><figure class='code'><figcaption>haproxy.cfg.j2</figcaption><div class='highlight'><table><tr><td class='line-numbers' aria-hidden='true'><pre><div data-line='1' class='line-number'></div><div data-line='2' class='line-number'></div><div data-line='3' class='line-number'></div><div data-line='4' class='line-number'></div><div data-line='5' class='line-number'></div><div data-line='6' class='line-number'></div><div data-line='7' class='line-number'></div><div data-line='8' class='line-number'></div><div data-line='9' class='line-number'></div><div data-line='10' class='line-number'></div><div data-line='11' class='line-number'></div><div data-line='12' class='line-number'></div><div data-line='13' class='line-number'></div><div data-line='14' class='line-number'></div><div data-line='15' class='line-number'></div><div data-line='16' class='line-number'></div><div data-line='17' class='line-number'></div><div data-line='18' class='line-number'></div><div data-line='19' class='line-number'></div><div data-line='20' class='line-number'></div><div data-line='21' class='line-number'></div><div data-line='22' class='line-number'></div><div data-line='23' class='line-number'></div><div data-line='24' class='line-number'></div><div data-line='25' class='line-number'></div><div data-line='26' class='line-number'></div><div data-line='27' class='line-number'></div><div data-line='28' class='line-number'></div><div data-line='29' class='line-number'></div><div data-line='30' class='line-number'></div><div data-line='31' class='line-number'></div><div data-line='32' class='line-number'></div><div data-line='33' class='line-number'></div><div data-line='34' class='line-number'></div><div data-line='35' class='line-number'></div><div data-line='36' class='line-number'></div><div data-line='37' class='line-number'></div><div data-line='38' class='line-number'></div><div data-line='39' class='line-number'></div><div data-line='40' class='line-number'></div><div data-line='41' class='line-number'></div><div data-line='42' class='line-number'></div><div data-line='43' class='line-number'></div><div data-line='44' class='line-number'></div><div data-line='45' class='line-number'></div></pre></td><td class='main  jinja'><pre><div class='line'><span class="x">global</span>
+</div><div class='line'><span class="x">    log 127.0.0.1   local0</span>
+</div><div class='line'><span class="x">    log 127.0.0.1   local1 notice</span>
+</div><div class='line'><span class="x">    maxconn 4096</span>
+</div><div class='line'><span class="x">    user haproxy</span>
+</div><div class='line'><span class="x">    group haproxy</span>
+</div><div class='line'><span class="x">    daemon</span>
+</div><div class='line'> </div><div class='line'><span class="x">defaults</span>
+</div><div class='line'><span class="x">    log global</span>
+</div><div class='line'><span class="x">    mode    http</span>
+</div><div class='line'><span class="x">    option  httplog</span>
+</div><div class='line'><span class="x">    option  dontlognull</span>
+</div><div class='line'><span class="x">    retries 3</span>
+</div><div class='line'><span class="x">    option redispatch</span>
+</div><div class='line'><span class="x">    maxconn 2000</span>
+</div><div class='line'><span class="x">    contimeout  5000</span>
+</div><div class='line'><span class="x">    clitimeout  50000</span>
+</div><div class='line'><span class="x">    srvtimeout  50000</span>
+</div><div class='line'> </div><div class='line'><span class="x">   stats enable</span>
+</div><div class='line'><span class="x">    stats auth      admin:password</span>
+</div><div class='line'><span class="x">    stats uri       /monitor</span>
+</div><div class='line'><span class="x">    stats refresh   5s</span>
+</div><div class='line'><span class="x">    option httpchk  GET /status</span>
+</div><div class='line'><span class="x">    retries     5</span>
+</div><div class='line'><span class="x">    option redispatch</span>
+</div><div class='line'><span class="x">    errorfile   503 /etc/haproxy/errors/503.http</span>
+</div><div class='line'><span class="x">    errorfile   400 /etc/haproxy/errors/400.http</span>
+</div><div class='line'><span class="x">    errorfile   403 /etc/haproxy/errors/403.http</span>
+</div><div class='line'><span class="x">    errorfile   408 /etc/haproxy/errors/408.http</span>
+</div><div class='line'><span class="x">    errorfile   500 /etc/haproxy/errors/500.http</span>
+</div><div class='line'><span class="x">    errorfile   502 /etc/haproxy/errors/502.http</span>
+</div><div class='line'><span class="x">    errorfile   503 /etc/haproxy/errors/503.http</span>
+</div><div class='line'><span class="x">    errorfile   504 /etc/haproxy/errors/504.http</span>
+</div><div class='line'><span class="x">    balance roundrobin  # each server is used in turns, according to assigned weight</span>
+</div><div class='line'> </div><div class='line'><span class="x">listen http-in</span>
+</div><div class='line'><span class="x">    bind :80</span>
+</div><div class='line'><span class="x">    monitor-uri   /haproxy  # end point to monitor HAProxy status (returns 200)</span>
+</div><div class='line'><span class="x">    # option httpclose</span>
+</div><div class='line'><span class="x">    </span><span class="cp">&#x7b;&#x25;</span> <span class="k">for</span> <span class="nv">dmp_server</span> <span class="k">in</span> <span class="nv">dmp_servers</span> <span class="cp">%}</span><span class="x"></span>
+</div><div class='line'><span class="x">    server </span><span class="cp">&#x7b;&#x7b;</span> <span class="nv">dmp_server</span> <span class="cp">}}</span><span class="x"> </span><span class="cp">&#x7b;&#x7b;</span> <span class="nv">dmp_server</span> <span class="cp">}}</span><span class="x">:</span><span class="cp">&#x7b;&#x7b;</span> <span class="nv">dmp_port</span> <span class="cp">}}</span><span class="x"> weight 1 maxconn 1000 check inter 4000</span>
+</div><div class='line'><span class="x">    </span><span class="cp">&#x7b;&#x25;</span> <span class="k">endfor</span> <span class="cp">%}</span><span class="x"></span>
+</div><div class='line'><span class="x">    rspidel ^Set-cookie:\ IP=   # do not let this cookie tell our internal IP address</span>
+</div></pre></td></tr></table></div></figure></p>
+
+<p>Include handlers at the end of the file:</p>
+
+<p><figure class='code'><figcaption>haproxy.yml </figcaption><div class='highlight'><table><tr><td class='line-numbers' aria-hidden='true'><pre><div data-line='1' class='line-number'></div><div data-line='2' class='line-number'></div></pre></td><td class='main  yaml'><pre><div class='line'><span class="l-Scalar-Plain">handlers</span><span class="p-Indicator">:</span>
+</div><div class='line'>    <span class="p-Indicator">&ndash;</span> <span class="l-Scalar-Plain">include</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">handlers/main.yml</span>
+</div></pre></td></tr></table></div></figure></p>
+
+<p>The content of handlers/main.yml looks like this:</p>
+
+<p><figure class='code'><figcaption>handlers/main.yml</figcaption><div class='highlight'><table><tr><td class='line-numbers' aria-hidden='true'><pre><div data-line='1' class='line-number'></div><div data-line='2' class='line-number'></div><div data-line='3' class='line-number'></div><div data-line='4' class='line-number'></div><div data-line='5' class='line-number'></div><div data-line='6' class='line-number'></div><div data-line='7' class='line-number'></div><div data-line='8' class='line-number'></div></pre></td><td class='main  yaml'><pre><div class='line'><span class="nn">&mdash;&ndash;</span>
+</div><div class='line'><span class="c1"># Ansible Handlers</span>
+</div><div class='line'> </div><div class='line'><span class="p-Indicator">&ndash;</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">restart haproxy</span>
+</div><div class='line'>  <span class="l-Scalar-Plain">action</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">service name=haproxy state=restarted</span>
+</div><div class='line'> </div><div class='line'><span class="p-Indicator">&ndash;</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">restart rsyslog</span>
+</div><div class='line'>  <span class="l-Scalar-Plain">action</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">service name=rsyslog state=restarted</span>
+</div></pre></td></tr></table></div></figure></p>
+
+<h3>Optional</h3>
+
+
+<p>Include Scout (<a href="https://scoutapp.com">https://scoutapp.com</a>) and Papertrail (<a href="https://papertrailapp.com">https://papertrailapp.com</a>)
+More on this later&hellip;</p>
+
+<p><figure class='code'><figcaption>haproxy.yml</figcaption><div class='highlight'><table><tr><td class='line-numbers' aria-hidden='true'><pre><div data-line='1' class='line-number'></div><div data-line='2' class='line-number'></div><div data-line='3' class='line-number'></div><div data-line='4' class='line-number'></div><div data-line='5' class='line-number'></div><div data-line='6' class='line-number'></div><div data-line='7' class='line-number'></div></pre></td><td class='main  yaml'><pre><div class='line'>    <span class="c1"># Scout</span>
+</div><div class='line'>    <span class="p-Indicator">&ndash;</span> <span class="l-Scalar-Plain">include</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">tasks/scout.yml</span>
+</div><div class='line'>      <span class="l-Scalar-Plain">when</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">env == &#39;prod&#39;</span>
+</div><div class='line'> </div><div class='line'>    <span class="c1"># Papertrail for logging</span>
+</div><div class='line'>    <span class="p-Indicator">&ndash;</span> <span class="l-Scalar-Plain">include</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">tasks/papertrail.yml</span>
+</div><div class='line'>      <span class="l-Scalar-Plain">when</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">env == &#39;prod&#39;</span>
+</div></pre></td></tr></table></div></figure></p>
+
+<p>Now run it:</p>
+
+<p><figure class='code'><div class='highlight'><table><tr><td class='line-numbers' aria-hidden='true'><pre><div data-line='1' class='line-number'></div></pre></td><td class='main  bash'><pre><div class='line'>ansible-playbook -T 120 -i &lt;inventory-file&gt; haproxy.yml
+</div></pre></td></tr></table></div></figure></p>
+]]></content>
+  </entry>
+  
+</feed>

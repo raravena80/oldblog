@@ -1,0 +1,407 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Ansible Playbook for PaperTrail on Ubuntu - Ricardo Aravena's Blog</title>
+  <meta name="author" content="Ricardo Aravena">
+
+  
+  <meta name="description" content="This posts describes how to create a simple
+Ansible task
+on how to setup PaperTrail on Ubuntu.
+Because it&rsquo;s a task it needs to be included in &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://raravena80.github.io/blog/2013/10/29/ansible-playbook-for-papertrail-on-ubuntu">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="Ricardo Aravena's Blog" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Ricardo Aravena's Blog</a></h1>
+  
+    <h2>Blogging for DevOps hackers.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:raravena80.github.io" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Ansible Playbook for PaperTrail on Ubuntu</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-10-29T11:54:00-07:00" pubdate data-updated="true">Oct 29<span>th</span>, 2013</time>
+        
+         | <a href="#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>This posts describes how to create a simple
+<a href="http://www.ansiblew">Ansible</a> task
+on how to setup <a href="https://www.scoutapp.com">PaperTrail</a> on Ubuntu.
+Because it&rsquo;s a <code>task</code> it needs to be included in an ansible playbook.</p>
+
+<p>It&rsquo;s a follow up to a previous
+ <a href="/blog/2013/10/21/how-to-create-an-ansible-playbook-to-configure-haproxy/">blog</a>
+ describing an Ansible Playbook to setup an HAProxy system. This Ansible task can
+ be included in the HAProxy playbook as well as any other playbooks with something
+ like this:</p>
+
+<p><figure class='code'><figcaption>papertrail.yml</figcaption><div class='highlight'><table><tr><td class='line-numbers' aria-hidden='true'><pre><div data-line='1' class='line-number'></div><div data-line='2' class='line-number'></div><div data-line='3' class='line-number'></div><div data-line='4' class='line-number'></div><div data-line='5' class='line-number'></div><div data-line='6' class='line-number'></div><div data-line='7' class='line-number'></div><div data-line='8' class='line-number'></div><div data-line='9' class='line-number'></div><div data-line='10' class='line-number'></div></pre></td><td class='main  yaml'><pre><div class='line'><span class="nn">&mdash;&ndash;</span>
+</div><div class='line'><span class="l-Scalar-Plain">PLAYBOOK</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Install papertrail on Ubuntu</span>
+</div><div class='line'><span class="nn">&mdash;&ndash;</span>
+</div><div class='line'><span class="p-Indicator">&ndash;</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">scout</span>
+</div><div class='line'>  <span class="l-Scalar-Plain">hosts</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">all</span>
+</div><div class='line'>  <span class="l-Scalar-Plain">user</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">&lt;user-with-sudo&gt;</span>
+</div><div class='line'>  <span class="l-Scalar-Plain">sudo</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">True</span>
+</div><div class='line'> </div><div class='line'>  <span class="l-Scalar-Plain">tasks</span><span class="p-Indicator">:</span>
+</div><div class='line'>    <span class="p-Indicator">&ndash;</span> <span class="l-Scalar-Plain">include</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">tasks/papertrail.yml</span>
+</div></pre></td></tr></table></div></figure></p>
+
+<p>Next, we define the <code>task</code> that includes installing the dependencies
+rsyslog and libssl-dev. Also we copy a specific rsyslog configuration
+for papertrail.</p>
+
+<p><figure class='code'><figcaption>papertrail.yml</figcaption><div class='highlight'><table><tr><td class='line-numbers' aria-hidden='true'><pre><div data-line='1' class='line-number'></div><div data-line='2' class='line-number'></div><div data-line='3' class='line-number'></div><div data-line='4' class='line-number'></div><div data-line='5' class='line-number'></div><div data-line='6' class='line-number'></div><div data-line='7' class='line-number'></div><div data-line='8' class='line-number'></div><div data-line='9' class='line-number'></div><div data-line='10' class='line-number'></div><div data-line='11' class='line-number'></div><div data-line='12' class='line-number'></div><div data-line='13' class='line-number'></div><div data-line='14' class='line-number'></div><div data-line='15' class='line-number'></div></pre></td><td class='main  yaml'><pre><div class='line'><span class="nn">&mdash;&ndash;</span>
+</div><div class='line'><span class="c1"># TASK: Papertrail log aggregation</span>
+</div><div class='line'> </div><div class='line'><span class="p-Indicator">&ndash;</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Install dependencies for Papertrail</span>
+</div><div class='line'>  <span class="l-Scalar-Plain">apt</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">pkg=$item state=latest</span>
+</div><div class='line'>  <span class="l-Scalar-Plain">with_items</span><span class="p-Indicator">:</span>
+</div><div class='line'>    <span class="p-Indicator">&ndash;</span> <span class="l-Scalar-Plain">libssl-dev</span>
+</div><div class='line'>    <span class="p-Indicator">&ndash;</span> <span class="l-Scalar-Plain">rsyslog-gnutls</span>
+</div><div class='line'> </div><div class='line'><span class="p-Indicator">&ndash;</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Copy rsyslog.conf</span>
+</div><div class='line'>  <span class="l-Scalar-Plain">copy</span><span class="p-Indicator">:</span> <span class="p-Indicator">&gt;</span>
+</div><div class='line'>    <span class="no">src=files/rsyslog.conf</span>
+</div><div class='line'>    <span class="no">dest=/etc/rsyslog.conf</span>
+</div><div class='line'>    <span class="no">owner=root group=root mode=0444</span>
+</div><div class='line'>  <span class="l-Scalar-Plain">notify</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">restart rsyslog</span>
+</div></pre></td></tr></table></div></figure></p>
+
+<p>And here&rsquo;s the content of rsyslog.conf:</p>
+
+<script
+  src="https://gist.github.com/raravena80/7221713.js?file=rsyslog.conf">
+</script>
+
+
+<p>Next you need to include the papertrail cerfiticate file if you want
+to encrypt your connection from rsyslog to PaperTrail.
+The link to the certificate file is
+<a href="https://papertrailapp.com/tools/syslog.papertrail.crt">here</a>.
+You also need to tell Ansible to restart rsyslog when it installs
+this file using the <code>notify</code> keyword.</p>
+
+<p><figure class='code'><figcaption>papertrail.yml</figcaption><div class='highlight'><table><tr><td class='line-numbers' aria-hidden='true'><pre><div data-line='1' class='line-number'></div><div data-line='2' class='line-number'></div><div data-line='3' class='line-number'></div><div data-line='4' class='line-number'></div><div data-line='5' class='line-number'></div><div data-line='6' class='line-number'></div></pre></td><td class='main  yaml'><pre><div class='line'><span class="p-Indicator">&ndash;</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Papertrail certificate</span>
+</div><div class='line'>  <span class="l-Scalar-Plain">copy</span><span class="p-Indicator">:</span> <span class="p-Indicator">&gt;</span>
+</div><div class='line'>    <span class="no">src=files/syslog.papertrail.crt</span>
+</div><div class='line'>    <span class="no">dest=/etc/syslog.papertrail.crt</span>
+</div><div class='line'>    <span class="no">owner=root group=root mode=0444</span>
+</div><div class='line'>  <span class="l-Scalar-Plain">notify</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">restart rsyslog</span>
+</div></pre></td></tr></table></div></figure></p>
+
+<p>Here you include the specific papertrail configuration
+for rsyslog.
+<figure class='code'><figcaption>papertrail.yml</figcaption><div class='highlight'><table><tr><td class='line-numbers' aria-hidden='true'><pre><div data-line='1' class='line-number'></div><div data-line='2' class='line-number'></div><div data-line='3' class='line-number'></div><div data-line='4' class='line-number'></div><div data-line='5' class='line-number'></div><div data-line='6' class='line-number'></div></pre></td><td class='main  yaml'><pre><div class='line'><span class="p-Indicator">&ndash;</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Papertrail rsyslog config file</span>
+</div><div class='line'>  <span class="l-Scalar-Plain">copy</span><span class="p-Indicator">:</span> <span class="p-Indicator">&gt;</span>
+</div><div class='line'>    <span class="no">src=files/papertrail.conf</span>
+</div><div class='line'>    <span class="no">dest=/etc/rsyslog.d/70-papertrail.conf</span>
+</div><div class='line'>    <span class="no">owner=root group=root mode=0444</span>
+</div><div class='line'>  <span class="l-Scalar-Plain">notify</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">restart rsyslog</span>
+</div></pre></td></tr></table></div></figure></p>
+
+<p>The papertrail.conf file can be seen here:</p>
+
+<script
+  src="https://gist.github.com/raravena80/7221713.js?file=papertrail.conf">
+</script>
+
+
+<p>Optionally you can install the Ruby papertrail remote
+syslog in case you&rsquo;d like to send random logs from the machine
+to PaperTrail.</p>
+
+<p><figure class='code'><figcaption>papertrail.yml</figcaption><div class='highlight'><table><tr><td class='line-numbers' aria-hidden='true'><pre><div data-line='1' class='line-number'></div><div data-line='2' class='line-number'></div><div data-line='3' class='line-number'></div><div data-line='4' class='line-number'></div></pre></td><td class='main  yaml'><pre><div class='line'><span class="p-Indicator">&ndash;</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Install Papertrail remote file logger</span>
+</div><div class='line'>  <span class="l-Scalar-Plain">shell</span><span class="p-Indicator">:</span> <span class="p-Indicator">&gt;</span>
+</div><div class='line'>    <span class="no">executable=/bin/bash source /etc/profile.d/rvm.sh;</span>
+</div><div class='line'>    <span class="no">gem install remote_syslog &mdash;no-ri &mdash;no-rdoc</span>
+</div></pre></td></tr></table></div></figure></p>
+
+<p>Finally just run it: <code>ansible-playbook -T 120 -i inventory-file papertrail.yml</code></p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Ricardo Aravena</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-10-29T11:54:00-07:00" pubdate data-updated="true">Oct 29<span>th</span>, 2013</time>
+      
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://raravena80.github.io/blog/2013/10/29/ansible-playbook-for-papertrail-on-ubuntu/" data-via="raravena80" data-counturl="http://raravena80.github.io/blog/2013/10/29/ansible-playbook-for-papertrail-on-ubuntu/" >Tweet</a>
+  
+  
+  <div class="g-plusone" data-size="medium"></div>
+  
+  
+    <div class="fb-like" data-send="true" data-width="450" data-show-faces="false"></div>
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2013/10/24/simple-clouformation-with-multiple-aws-accounts/" title="Previous Post: Simple Clouformation With Multiple AWS Accounts">&laquo; Simple Clouformation With Multiple AWS Accounts</a>
+      
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    
+<section>
+	<span>
+		<img style="margin-left: 10px; margin-top: 10px;" src="http://www.gravatar.com/avatar/0656a4e62f16a7a102ffee3ec6b8aeaa" alt="Gravatar of Ricardo Aravena " title="Gravatar of Ricardo Aravena" />
+	</span>
+</section>
+
+<section>
+  <h1>About Me</h1>
+  <p>DevOps Hacker, Automation Fanatic.</p>
+  <p> Currently, working with Ansible, bash, Cloudera, AWS, Rackspace, etc</p>
+  <p><a href="https://twitter.com/admobius">@Admobius</a>, San Mateo, CA.</p>
+</section>
+<section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/10/29/ansible-playbook-for-papertrail-on-ubuntu/">Ansible Playbook for PaperTrail on Ubuntu</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/10/24/simple-clouformation-with-multiple-aws-accounts/">Simple Clouformation With Multiple AWS Accounts</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/10/22/ansible-playbook-for-scout-on-ubuntu/">Ansible Playbook for Scout on Ubuntu</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/10/21/upgrade-linux-kernel-on-chromebook/">Upgrade Linux Kernel on Chromebook</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/10/21/setup-a-simple-haproxy-config/">Setup a Simple HAProxy Config</a>
+      </li>
+    
+  </ul>
+</section>
+
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/raravena80">@raravena80</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'raravena80',
+            count: 5,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+<section>
+  <h1>On Delicious</h1>
+  <div id="delicious"></div>
+  <script type="text/javascript" src="http://feeds.delicious.com/v2/json/raravena80?count=3&amp;sort=date&amp;callback=renderDeliciousLinks"></script>
+  <p><a href="http://delicious.com/raravena80">My Delicious Bookmarks &raquo;</a></p>
+</section>
+
+
+<section>
+  <h1>Twitter</h1>
+  
+    <a href="//twitter.com/raravena80" class="twitter-follow-button" data-show-count="">Follow @raravena80</a>
+  
+  <!-- <ul id="tweets" data-user="raravena80" data-count="" data-replies="">
+    <li class="loading">Status updating...</li>
+  </ul> -->
+</section>
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Ricardo Aravena -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'raravena80';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://raravena80.github.io/blog/2013/10/29/ansible-playbook-for-papertrail-on-ubuntu/';
+        var disqus_url = 'http://raravena80.github.io/blog/2013/10/29/ansible-playbook-for-papertrail-on-ubuntu/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) {return;}
+  js = d.createElement(s); js.id = id; js.async = true;
+  js.src = "//connect.facebook.net/en_US/all.js#appId=212934732101925&xfbml=1";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+
+
+
+  <script type="text/javascript">
+    (function() {
+      var script = document.createElement('script'); script.type = 'text/javascript'; script.async = true;
+      script.src = 'https://apis.google.com/js/plusone.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(script, s);
+    })();
+  </script>
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>
