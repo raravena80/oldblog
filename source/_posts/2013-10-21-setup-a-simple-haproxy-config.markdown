@@ -4,6 +4,9 @@ title: "Setup a Simple HAProxy Config"
 date: 2013-10-21
 comments: true
 categories: haproxy
+keywords: haproxy Ricardo Aravena
+description: Setup a Simple HAProxy Config
+
 ---
 
 Here's simple haproxy configuration to get you started,

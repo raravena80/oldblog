@@ -4,6 +4,8 @@ title: "Ansible Playbook for Scout on Ubuntu"
 date: 2013-10-22
 comments: true
 # categories: scout ansible
+keywords: ansible scout ubuntu
+description: Ansible Playbook for Scout on Ubuntu
 
 ---
 
