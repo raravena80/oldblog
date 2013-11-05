@@ -4,6 +4,8 @@ title: "Simple Clouformation With Multiple AWS Accounts"
 date: 2013-10-24 14:03
 comments: true
 categories: [AWS, CloudFormation, JSON]
+keywords: AWS CloudFormation JSON Ricardo Aravena
+description: Simple Clouformation With Multiple AWS Accounts
 
 ---
 

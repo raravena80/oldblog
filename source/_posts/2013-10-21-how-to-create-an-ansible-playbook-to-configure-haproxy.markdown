@@ -4,6 +4,8 @@ title: "How To Create an Ansible Playbook to Configure HAProxy"
 date: 2013-10-21
 # categories: [ haproxy ]
 comments: true
+keyworks: ansible haproxy Ricardo Aravena
+description: How To Create an Ansible Playbook to Configure HAProxy
 
 ---
 

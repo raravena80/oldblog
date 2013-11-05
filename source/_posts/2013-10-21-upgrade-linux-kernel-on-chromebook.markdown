@@ -4,6 +4,8 @@ title: "Upgrade Linux Kernel on Chromebook"
 date: 2013-10-21 22:15
 comments: true
 categories: [linux kernel]
+keywords: linux kernel chromebook chrome Ricardo Aravena
+description: Upgrade Linux Kernel on Chromebook
 
 ---
 

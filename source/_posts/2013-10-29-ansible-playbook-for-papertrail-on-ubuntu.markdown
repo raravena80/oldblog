@@ -4,6 +4,9 @@ title: "Ansible Playbook for PaperTrail on Ubuntu"
 date: 2013-10-29 11:54
 comments: true
 categories:
+keywords: ansible papertrail papertrailapp ubuntu Ricardo Aravena
+description: Ansible Playbook for PaperTrail on Ubuntu
+
 ---
 
 This posts describes how to create a simple
