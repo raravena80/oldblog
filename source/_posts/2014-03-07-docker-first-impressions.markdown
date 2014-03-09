@@ -10,21 +10,20 @@ description: A first impressions take on Docker.
 
 For the last few days I've been taking at crack at using the recent [Docker](https://www.docker.io/) container deployment tool that I've been
 hearing a lot buzz about.
-In essence is wrapper on top of Linux [LXC containers](https://linuxcontainers.org/)  writen in the new friendly and not so popular yet [Go](http://golang.org/) language developed at Google.
+In essence, it's a wrapper on top of Linux [LXC containers](https://linuxcontainers.org/),  writen in the new friendly and not so popular yet [Go](http://golang.org/) language developed at Google.
 
 Just a little bit of background, for those of you not familiar with LXC containers,
 they are pretty much defined as `chroot` on steroids. Basically, you can run isolated virtual
-environments in a single Linux machines and make it look like that they are different machines.
-These environment give you the advantage of being isalated and at the same they are able to use
+environments in a single Linux machine and make it look like that they are different machines.
+These environments give you the advantage of being isalated and at the same they are able to use
 the same Linux exectutables and memory space to improve speed and footprint size.
 
 Docker is pretty easy to try from its [website](https://www.docker.io/), you can just click on the [Get Started](https://www.docker.io/gettingstarted/) 
-link and a UI terminal shows up where you can type Docker commands. It's CLI feels a lot like a CLI writen in Python or Ruby, yet it still don't
+link and a UI terminal shows up where you can type Docker commands. It's CLI feels a lot like a CLI writen in Python or Ruby, yet it still doesn't
 have the nice subtleties such as using a `?` to get help. To get help you simply type `docker help` or `docker command help` 
 
-
 Setup varies depending on your platform. It can be a bit confusing if you work with multiple say, Linux platforms but from personal experience
-most people stick to a more `favorite` Linux platform. Docker is also available for to be run MacOS and Windows, but in reality 
+most people stick to a more `favorite` Linux platform. Docker is also available for MacOS and Windows, but in reality 
 it doesn't run over either one since `LXC` is only available for Linux. They way they mention that it can be run on MacOS or Windows is by running 
 it on a lightweght VM. 
 
@@ -33,6 +32,7 @@ As of this writing there's a message on each one of the platform installation pa
 For me, it wasn't that difficult to setup, I just followed the steps on the Wiki. I don't think the steps
 are that difficult but it just requires basic knowledge of the Linux command line.
 Docker requires the Linux 3.8 kernel and in my case, I tried Docker on Ubuntu 13.10 so I didn't have to install an extra kernel packages.
+
 However, if you are running say Ubuntu 12.04 LTS (Precise) you are going to have to install the update kernel packages and reboot the machine 
 before you can use Docker:
 
@@ -44,14 +44,14 @@ $ sudo apt-get install linux-image-generic-lts-raring linux-headers-generic-lts-
 $ sudo reboot
 ```
 
-In my case for Ubuntu 13.10 it says that if you want AUFS (AnotherUnionFS) support you need to install the `linux-image-extra` package:
+In my case, for Ubuntu 13.10 it says that if you want AUFS (AnotherUnionFS) support you need to install the `linux-image-extra` package:
 
 ``` bash linenos:false
 $ sudo apt-get update
 $ sudo apt-get install linux-image-extra-\`uname -r\`
 ```
 
-However, it turns out that my Ubuntu 13.10 already had the `linux-image-extra` package, so I didn't have to make any changes. 
+It turns out that my Ubuntu 13.10 already had the `linux-image-extra` package, so I didn't have to make any changes. 
 
 
 Next I had to run:
@@ -84,14 +84,14 @@ and then run:
 $ sudo ufw allow 4243/tcp
 ```
 
-Now we are all dandy and ready to try commands docker commands. The first one that you want to run is
+Now we are all dandy and ready to try Docker commands. The first one that you want to run is
 the one to create a container:
 
 ``` bash linenos:false
 $ sudo docker run -i -t ubuntu /bin/bash
 ```
 
-This command will automatically download all the default ubuntu container images that you can use to run your ubuntu container. It does take a while but then again it's downloading full container images each about 60Mb compressed. Keep in mind that the `-i` option means "interactive" and the `-t` means allocate a pseudo tty.
+This command will automatically download all the default ubuntu container images that you can use to run your Ubuntu container. It does take a while but then again it's downloading full container images each about 60Mb compressed. Keep in mind that the `-i` option means "interactive" and the `-t` means allocate a pseudo tty.
 
 This the output of the command:
 
@@ -111,9 +111,11 @@ f323cf34fd77: Download complete
 321f7f4200f4: Download complete
 ```
 
-After it's complete it will display a `bash` shell in the container with the prompt displaying the container hash id. For example, `root@3b667578ce4f:/#`. You can run almost any linux command that your Ubuntu supports, including something like `apt-get update; apt-get install apache2`. I ran `apt-get upgrade` and somehow it couldn't finish the installation saying some of the packages were missing dependencies, so in essence I fried the container.
+After it's complete, it will display a `bash` shell in the container with the prompt displaying the container hash id. For example, `root@3b667578ce4f:/#`. You can run almost any linux command that your Ubuntu distro supports, including something like `apt-get update; apt-get install apache2`. 
 
-I said no problem I'll just get rid of it. First git the `ctrl-p ctrl-q` to detach from the container. Then run these Docker commands to find out the container id (if you somehow don't remember it), stop the container and then delete the container.
+I ran `apt-get upgrade` and somehow it couldn't finish the installation saying some of the packages were missing dependencies, so in essence I fried the container.
+
+I said no problem, I'll just get rid of it. First hit the `ctrl-p ctrl-q` keys to detach from the container. Then, run these Docker commands to find out the container id (if you somehow don't remember it), stop the container and then delete the container.
 
 ``` bash list-containers linenos:false
 $ docker ps
