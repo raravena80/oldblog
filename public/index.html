@@ -99,20 +99,20 @@ hearing a lot buzz &hellip;">
 
   <div class="entry-content"><p>For the last few days I&rsquo;ve been taking at crack at using the recent <a href="https://www.docker.io/">Docker</a> container deployment tool that I&rsquo;ve been
 hearing a lot buzz about.
-In essence is wrapper on top of Linux <a href="https://linuxcontainers.org/">LXC containers</a>  writen in the new friendly and not so popular yet <a href="http://golang.org/">Go</a> language developed at Google.</p>
+In essence, it&rsquo;s a wrapper on top of Linux <a href="https://linuxcontainers.org/">LXC containers</a>,  writen in the new friendly and not so popular yet <a href="http://golang.org/">Go</a> language developed at Google.</p>
 
 <p>Just a little bit of background, for those of you not familiar with LXC containers,
 they are pretty much defined as <code>chroot</code> on steroids. Basically, you can run isolated virtual
-environments in a single Linux machines and make it look like that they are different machines.
-These environment give you the advantage of being isalated and at the same they are able to use
+environments in a single Linux machine and make it look like that they are different machines.
+These environments give you the advantage of being isalated and at the same they are able to use
 the same Linux exectutables and memory space to improve speed and footprint size.</p>
 
 <p>Docker is pretty easy to try from its <a href="https://www.docker.io/">website</a>, you can just click on the <a href="https://www.docker.io/gettingstarted/">Get Started</a>
-link and a UI terminal shows up where you can type Docker commands. It&rsquo;s CLI feels a lot like a CLI writen in Python or Ruby, yet it still don&rsquo;t
+link and a UI terminal shows up where you can type Docker commands. It&rsquo;s CLI feels a lot like a CLI writen in Python or Ruby, yet it still doesn&rsquo;t
 have the nice subtleties such as using a <code>?</code> to get help. To get help you simply type <code>docker help</code> or <code>docker command help</code></p>
 
 <p>Setup varies depending on your platform. It can be a bit confusing if you work with multiple say, Linux platforms but from personal experience
-most people stick to a more <code>favorite</code> Linux platform. Docker is also available for to be run MacOS and Windows, but in reality
+most people stick to a more <code>favorite</code> Linux platform. Docker is also available for MacOS and Windows, but in reality
 it doesn&rsquo;t run over either one since <code>LXC</code> is only available for Linux. They way they mention that it can be run on MacOS or Windows is by running
 it on a lightweght VM.</p>
 
@@ -120,8 +120,9 @@ it on a lightweght VM.</p>
 
 <p>For me, it wasn&rsquo;t that difficult to setup, I just followed the steps on the Wiki. I don&rsquo;t think the steps
 are that difficult but it just requires basic knowledge of the Linux command line.
-Docker requires the Linux 3.8 kernel and in my case, I tried Docker on Ubuntu 13.10 so I didn&rsquo;t have to install an extra kernel packages.
-However, if you are running say Ubuntu 12.04 LTS (Precise) you are going to have to install the update kernel packages and reboot the machine
+Docker requires the Linux 3.8 kernel and in my case, I tried Docker on Ubuntu 13.10 so I didn&rsquo;t have to install an extra kernel packages.</p>
+
+<p>However, if you are running say Ubuntu 12.04 LTS (Precise) you are going to have to install the update kernel packages and reboot the machine
 before you can use Docker:</p>
 
 <p><figure class='code'><div class='highlight'><table><tr><td class='line-numbers' aria-hidden='true'><pre><div data-line='1' class='line-number'></div><div data-line='2' class='line-number'></div><div data-line='3' class='line-number'></div><div data-line='4' class='line-number'></div></pre></td><td class='main  bash'><pre><div class='line'><span class="nv">$ </span><span class="c"># install the backported kernel from raring</span>
@@ -130,13 +131,13 @@ before you can use Docker:</p>
 </div><div class='line'><span class="nv">$ </span>sudo reboot
 </div></pre></td></tr></table></div></figure></p>
 
-<p>In my case for Ubuntu 13.10 it says that if you want AUFS (AnotherUnionFS) support you need to install the <code>linux-image-extra</code> package:</p>
+<p>In my case, for Ubuntu 13.10 it says that if you want AUFS (AnotherUnionFS) support you need to install the <code>linux-image-extra</code> package:</p>
 
 <p><figure class='code'><div class='highlight'><table><tr><td class='line-numbers' aria-hidden='true'><pre><div data-line='1' class='line-number'></div><div data-line='2' class='line-number'></div></pre></td><td class='main  bash'><pre><div class='line'><span class="nv">$ </span>sudo apt-get update
 </div><div class='line'><span class="nv">$ </span>sudo apt-get install linux-image-extra-<span class="se">`</span>uname -r<span class="se">`</span>
 </div></pre></td></tr></table></div></figure></p>
 
-<p>However, it turns out that my Ubuntu 13.10 already had the <code>linux-image-extra</code> package, so I didn&rsquo;t have to make any changes.</p>
+<p>It turns out that my Ubuntu 13.10 already had the <code>linux-image-extra</code> package, so I didn&rsquo;t have to make any changes.</p>
 
 <p>Next I had to run:</p>
 
@@ -164,13 +165,13 @@ to allow it to forward traffic in the <code>/etc/default/ufw</code> file:</p>
 <p><figure class='code'><div class='highlight'><table><tr><td class='line-numbers' aria-hidden='true'><pre><div data-line='1' class='line-number'></div></pre></td><td class='main  bash'><pre><div class='line'><span class="nv">$ </span>sudo ufw allow 4243/tcp
 </div></pre></td></tr></table></div></figure></p>
 
-<p>Now we are all dandy and ready to try commands docker commands. The first one that you want to run is
+<p>Now we are all dandy and ready to try Docker commands. The first one that you want to run is
 the one to create a container:</p>
 
 <p><figure class='code'><div class='highlight'><table><tr><td class='line-numbers' aria-hidden='true'><pre><div data-line='1' class='line-number'></div></pre></td><td class='main  bash'><pre><div class='line'><span class="nv">$ </span>sudo docker run -i -t ubuntu /bin/bash
 </div></pre></td></tr></table></div></figure></p>
 
-<p>This command will automatically download all the default ubuntu container images that you can use to run your ubuntu container. It does take a while but then again it&rsquo;s downloading full container images each about 60Mb compressed. Keep in mind that the <code>-i</code> option means &ldquo;interactive&rdquo; and the <code>-t</code> means allocate a pseudo tty.</p>
+<p>This command will automatically download all the default ubuntu container images that you can use to run your Ubuntu container. It does take a while but then again it&rsquo;s downloading full container images each about 60Mb compressed. Keep in mind that the <code>-i</code> option means &ldquo;interactive&rdquo; and the <code>-t</code> means allocate a pseudo tty.</p>
 
 <p>This the output of the command:</p>
 
@@ -189,9 +190,11 @@ the one to create a container:</p>
 </div><div class='line'>321f7f4200f4: Download complete
 </div></pre></td></tr></table></div></figure></p>
 
-<p>After it&rsquo;s complete it will display a <code>bash</code> shell in the container with the prompt displaying the container hash id. For example, <code>root@3b667578ce4f:/#</code>. You can run almost any linux command that your Ubuntu supports, including something like <code>apt-get update; apt-get install apache2</code>. I ran <code>apt-get upgrade</code> and somehow it couldn&rsquo;t finish the installation saying some of the packages were missing dependencies, so in essence I fried the container.</p>
+<p>After it&rsquo;s complete, it will display a <code>bash</code> shell in the container with the prompt displaying the container hash id. For example, <code>root@3b667578ce4f:/#</code>. You can run almost any linux command that your Ubuntu distro supports, including something like <code>apt-get update; apt-get install apache2</code>.</p>
 
-<p>I said no problem I&rsquo;ll just get rid of it. First git the <code>ctrl-p ctrl-q</code> to detach from the container. Then run these Docker commands to find out the container id (if you somehow don&rsquo;t remember it), stop the container and then delete the container.</p>
+<p>I ran <code>apt-get upgrade</code> and somehow it couldn&rsquo;t finish the installation saying some of the packages were missing dependencies, so in essence I fried the container.</p>
+
+<p>I said no problem, I&rsquo;ll just get rid of it. First hit the <code>ctrl-p ctrl-q</code> keys to detach from the container. Then, run these Docker commands to find out the container id (if you somehow don&rsquo;t remember it), stop the container and then delete the container.</p>
 
 <p><figure class='code'><figcaption>list-containers</figcaption><div class='highlight'><table><tr><td class='line-numbers' aria-hidden='true'><pre><div data-line='1' class='line-number'></div></pre></td><td class='main  bash'><pre><div class='line'><span class="nv">$ </span>docker ps
 </div></pre></td></tr></table></div></figure></p>
