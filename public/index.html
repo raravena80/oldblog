@@ -120,7 +120,7 @@ it on a lightweght VM.</p>
 
 <p>For me, it wasn&rsquo;t that difficult to setup, I just followed the steps on the Wiki. I don&rsquo;t think the steps
 are that difficult but it just requires basic knowledge of the Linux command line.
-Docker requires the Linux 3.8 kernel and in my case, I tried Docker on Ubuntu 13.10 so I didn&rsquo;t have to install an extra kernel packages.</p>
+Docker requires the Linux 3.8 kernel and in my case, I tried Docker on Ubuntu 13.10 so I didn&rsquo;t have to install an extra kernel package.</p>
 
 <p>However, if you are running say Ubuntu 12.04 LTS (Precise) you are going to have to install the update kernel packages and reboot the machine
 before you can use Docker:</p>
@@ -190,7 +190,7 @@ the one to create a container:</p>
 </div><div class='line'>321f7f4200f4: Download complete
 </div></pre></td></tr></table></div></figure></p>
 
-<p>After it&rsquo;s complete, it will display a <code>bash</code> shell in the container with the prompt displaying the container hash id. For example, <code>root@3b667578ce4f:/#</code>. You can run almost any linux command that your Ubuntu distro supports, including something like <code>apt-get update; apt-get install apache2</code>.</p>
+<p>After it&rsquo;s complete, it will display a <code>bash</code> shell in the container with the prompt displaying the container hash id. For example, <code>root@3b667578ce4f:/#</code>. You can run almost any linux command that your Ubuntu distro supports, including something like: <code>apt-get update; apt-get install apache2</code>.</p>
 
 <p>I ran <code>apt-get upgrade</code> and somehow it couldn&rsquo;t finish the installation saying some of the packages were missing dependencies, so in essence I fried the container.</p>
 
