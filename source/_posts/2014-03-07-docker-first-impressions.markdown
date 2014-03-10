@@ -31,7 +31,7 @@ As of this writing there's a message on each one of the platform installation pa
 
 For me, it wasn't that difficult to setup, I just followed the steps on the Wiki. I don't think the steps
 are that difficult but it just requires basic knowledge of the Linux command line.
-Docker requires the Linux 3.8 kernel and in my case, I tried Docker on Ubuntu 13.10 so I didn't have to install an extra kernel packages.
+Docker requires the Linux 3.8 kernel and in my case, I tried Docker on Ubuntu 13.10 so I didn't have to install an extra kernel package.
 
 However, if you are running say Ubuntu 12.04 LTS (Precise) you are going to have to install the update kernel packages and reboot the machine 
 before you can use Docker:
@@ -111,7 +111,7 @@ f323cf34fd77: Download complete
 321f7f4200f4: Download complete
 ```
 
-After it's complete, it will display a `bash` shell in the container with the prompt displaying the container hash id. For example, `root@3b667578ce4f:/#`. You can run almost any linux command that your Ubuntu distro supports, including something like `apt-get update; apt-get install apache2`. 
+After it's complete, it will display a `bash` shell in the container with the prompt displaying the container hash id. For example, `root@3b667578ce4f:/#`. You can run almost any linux command that your Ubuntu distro supports, including something like: `apt-get update; apt-get install apache2`. 
 
 I ran `apt-get upgrade` and somehow it couldn't finish the installation saying some of the packages were missing dependencies, so in essence I fried the container.
 
